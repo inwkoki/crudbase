@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,300&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-
+ 
 :root {
   --bg: #0d0d12;
   --surface: #13131c;
@@ -36,7 +36,7 @@
   --shadow: 0 2px 8px rgba(0,0,0,0.3);
   --shadow-md: 0 8px 24px rgba(0,0,0,0.4);
 }
-
+ 
 body {
   background: var(--bg);
   color: var(--text);
@@ -45,7 +45,7 @@ body {
   min-height: 100vh;
   line-height: 1.5;
 }
-
+ 
 body::before {
   content: '';
   position: fixed;
@@ -57,14 +57,14 @@ body::before {
   pointer-events: none;
   z-index: 0;
 }
-
+ 
 .layout {
   display: flex;
   min-height: 100vh;
   position: relative;
   z-index: 1;
 }
-
+ 
 /* ── Sidebar ── */
 .sidebar {
   width: 220px;
@@ -79,13 +79,13 @@ body::before {
   height: 100vh;
   overflow-y: auto;
 }
-
+ 
 .brand {
   padding: 0 20px 24px;
   border-bottom: 1px solid var(--border);
   margin-bottom: 16px;
 }
-
+ 
 .brand-name {
   font-family: var(--serif);
   font-size: 22px;
@@ -94,9 +94,9 @@ body::before {
   letter-spacing: -0.3px;
   line-height: 1.1;
 }
-
+ 
 .brand-name span { color: var(--accent); }
-
+ 
 .brand-sub {
   font-size: 11px;
   color: var(--text-dim);
@@ -104,7 +104,7 @@ body::before {
   font-weight: 300;
   letter-spacing: 0.3px;
 }
-
+ 
 .nav-label {
   font-size: 10px;
   font-weight: 600;
@@ -114,7 +114,7 @@ body::before {
   padding: 0 20px;
   margin: 10px 0 4px;
 }
-
+ 
 .nav-item {
   display: flex;
   align-items: center;
@@ -126,12 +126,12 @@ body::before {
   transition: all 0.15s;
   border-left: 2px solid transparent;
 }
-
+ 
 .nav-item:hover { background: var(--surface2); color: var(--text); }
 .nav-item.active { background: var(--accent-bg); color: var(--accent); border-left-color: var(--accent); font-weight: 500; }
-
+ 
 .nav-icon { font-size: 14px; width: 18px; text-align: center; opacity: 0.7; }
-
+ 
 .nav-count {
   margin-left: auto;
   background: var(--surface3);
@@ -140,15 +140,15 @@ body::before {
   font-size: 11px;
   color: var(--text-dim);
 }
-
+ 
 .nav-item.active .nav-count { background: rgba(124,92,252,0.2); color: var(--accent); }
-
+ 
 /* ── Main ── */
 .main { flex: 1; padding: 36px 40px; min-width: 0; }
-
+ 
 .page { display: none; }
 .page.active { display: block; }
-
+ 
 /* ── Page header ── */
 .page-header {
   display: flex;
@@ -158,7 +158,7 @@ body::before {
   gap: 16px;
   flex-wrap: wrap;
 }
-
+ 
 .page-title {
   font-family: var(--serif);
   font-size: 30px;
@@ -167,9 +167,9 @@ body::before {
   line-height: 1.15;
   color: var(--text);
 }
-
+ 
 .page-subtitle { font-size: 12.5px; color: var(--text-dim); margin-top: 4px; font-weight: 300; }
-
+ 
 /* ── Stats ── */
 .stats-row {
   display: grid;
@@ -177,7 +177,7 @@ body::before {
   gap: 10px;
   margin-bottom: 24px;
 }
-
+ 
 .stat-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -186,9 +186,9 @@ body::before {
   box-shadow: var(--shadow);
   transition: border-color 0.2s;
 }
-
+ 
 .stat-card:hover { border-color: var(--border2); }
-
+ 
 .stat-num {
   font-family: var(--serif);
   font-size: 34px;
@@ -196,12 +196,12 @@ body::before {
   line-height: 1;
   margin-bottom: 4px;
 }
-
+ 
 .stat-lbl { font-size: 11.5px; color: var(--text-dim); }
-
+ 
 /* ── Toolbar ── */
 .toolbar { display: flex; gap: 8px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
-
+ 
 .chip {
   padding: 5px 14px;
   border-radius: 999px;
@@ -214,10 +214,10 @@ body::before {
   transition: all 0.15s;
   font-family: var(--sans);
 }
-
+ 
 .chip:hover { border-color: var(--accent); color: var(--accent); }
 .chip.active { background: var(--accent); border-color: var(--accent); color: white; }
-
+ 
 /* ── Button ── */
 .btn {
   display: inline-flex; align-items: center; gap: 6px;
@@ -225,7 +225,7 @@ body::before {
   font-family: var(--sans); font-size: 13.5px; font-weight: 500;
   cursor: pointer; border: none; transition: all 0.15s; white-space: nowrap;
 }
-
+ 
 .btn-primary { background: var(--accent); color: white; box-shadow: 0 2px 12px rgba(124,92,252,0.35); }
 .btn-primary:hover { background: #9070ff; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(124,92,252,0.45); }
 .btn-ghost { background: var(--surface2); color: var(--text-dim); border: 1px solid var(--border2); }
@@ -233,7 +233,7 @@ body::before {
 .btn-danger { background: rgba(252,92,125,0.08); color: var(--high-c); border: 1px solid rgba(252,92,125,0.15); }
 .btn-danger:hover { background: rgba(252,92,125,0.15); }
 .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 8px; }
-
+ 
 /* ── Create form ── */
 .form-card {
   background: var(--surface);
@@ -244,16 +244,16 @@ body::before {
   box-shadow: var(--shadow-md);
   animation: slideDown 0.25s ease;
 }
-
+ 
 @keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
-
+ 
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .form-grid.three { grid-template-columns: 2fr 1fr 1fr; }
 .form-full { grid-column: 1/-1; }
 .form-group { display: flex; flex-direction: column; gap: 5px; }
-
+ 
 label { font-size: 11px; font-weight: 500; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; }
-
+ 
 input[type=text], input[type=date], textarea, select {
   width: 100%;
   background: var(--bg);
@@ -266,21 +266,21 @@ input[type=text], input[type=date], textarea, select {
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
-
+ 
 input:focus, textarea:focus, select:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(124,92,252,0.12);
 }
-
+ 
 select option { background: var(--surface2); }
 textarea { resize: vertical; min-height: 68px; }
 input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
-
+ 
 .form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
-
+ 
 /* ── Task list ── */
 .task-list { display: flex; flex-direction: column; gap: 6px; }
-
+ 
 .task-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -295,35 +295,35 @@ input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
   animation: fadeUp 0.2s ease both;
   border-left: 2px solid transparent;
 }
-
+ 
 @keyframes fadeUp { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
-
+ 
 .task-card:hover { border-color: var(--border2); background: var(--surface2); }
 .task-card.status-todo { border-left-color: var(--todo-c); }
 .task-card.status-in-progress { border-left-color: var(--prog-c); }
 .task-card.status-done { border-left-color: var(--done-c); }
 .task-card.drag-over { border-color: var(--accent) !important; background: var(--accent-bg) !important; }
 .task-card.dragging { opacity: 0.35; }
-
+ 
 .drag-handle {
   cursor: grab; color: var(--text-light);
   font-size: 15px; padding-top: 2px; user-select: none; line-height: 1;
   transition: color 0.15s;
 }
 .task-card:hover .drag-handle { color: var(--text-dim); }
-
+ 
 .task-body { min-width: 0; }
-
+ 
 .task-title {
   font-size: 14.5px; font-weight: 500; color: var(--text);
   line-height: 1.35; margin-bottom: 5px;
 }
 .task-title.done-title { text-decoration: line-through; color: var(--text-dim); }
-
+ 
 .task-desc { font-size: 12.5px; color: var(--text-dim); margin-bottom: 8px; font-weight: 300; line-height: 1.5; }
-
+ 
 .task-meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-
+ 
 .status-pill {
   padding: 3px 10px; border-radius: 999px;
   font-size: 11.5px; font-weight: 500;
@@ -334,49 +334,49 @@ input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
 .status-pill.todo { background: var(--todo-bg); color: var(--todo-c); border-color: rgba(91,163,245,0.2); }
 .status-pill.in-progress { background: var(--prog-bg); color: var(--prog-c); border-color: rgba(245,166,35,0.2); }
 .status-pill.done { background: var(--done-bg); color: var(--done-c); border-color: rgba(74,222,128,0.2); }
-
+ 
 .priority-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
 .priority-dot.high { background: var(--high-c); }
 .priority-dot.medium { background: var(--med-c); }
 .priority-dot.low { background: var(--low-c); }
-
+ 
 .meta-tag { font-size: 11.5px; color: var(--text-dim); display: flex; align-items: center; gap: 3px; }
 .deadline-overdue { color: var(--high-c); font-weight: 500; }
 .deadline-soon { color: var(--prog-c); font-weight: 500; }
-
+ 
 .assignee-chips { display: flex; gap: 4px; flex-wrap: wrap; }
 .assignee-chip {
   background: var(--surface3); border: 1px solid var(--border2);
   border-radius: 999px; padding: 2px 9px;
   font-size: 11px; color: var(--text-dim);
 }
-
+ 
 .task-actions { display: flex; gap: 5px; align-items: flex-start; flex-shrink: 0; }
-
+ 
 .task-edit {
   display: none; grid-column: 1/-1;
   border-top: 1px solid var(--border); padding-top: 14px; margin-top: 6px;
 }
 .task-edit.open { display: block; }
-
+ 
 /* ── Empty ── */
 .empty { text-align: center; padding: 70px 20px; color: var(--text-dim); }
 .empty-icon { font-size: 36px; margin-bottom: 12px; opacity: 0.2; }
 .empty-title { font-family: var(--serif); font-size: 20px; font-weight: 300; margin-bottom: 6px; color: var(--text-dim); }
 .empty-sub { font-size: 12.5px; font-weight: 300; }
-
+ 
 /* ── Calendar ── */
 .calendar-wrap {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow);
 }
-
+ 
 .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-
+ 
 .cal-month { font-family: var(--serif); font-size: 22px; font-weight: 500; letter-spacing: -0.3px; }
-
+ 
 .cal-nav { display: flex; gap: 6px; }
-
+ 
 .cal-nav-btn {
   width: 32px; height: 32px; border-radius: 8px;
   border: 1px solid var(--border2); background: var(--surface2);
@@ -385,14 +385,14 @@ input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
   transition: all 0.15s;
 }
 .cal-nav-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
-
+ 
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-
+ 
 .cal-dow {
   text-align: center; font-size: 10.5px; font-weight: 600;
   color: var(--text-light); text-transform: uppercase; letter-spacing: 0.8px; padding: 6px 0;
 }
-
+ 
 .cal-day {
   aspect-ratio: 1; border-radius: 10px;
   display: flex; flex-direction: column; align-items: center;
@@ -400,45 +400,45 @@ input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
   cursor: pointer; transition: all 0.15s;
   border: 1px solid transparent; min-height: 52px; font-size: 13px;
 }
-
+ 
 .cal-day:hover { background: var(--surface2); border-color: var(--border); }
 .cal-day.today { background: var(--accent-bg); border-color: rgba(124,92,252,0.3); }
 .cal-day.today .cal-day-num { color: var(--accent); font-weight: 700; }
 .cal-day.other-month { opacity: 0.25; }
 .cal-day.has-tasks { background: var(--surface2); border-color: var(--border); }
-
+ 
 .cal-day-num { font-size: 12.5px; font-weight: 400; margin-bottom: 4px; line-height: 1; }
-
+ 
 .cal-task-dots { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; }
-
+ 
 .cal-dot { width: 5px; height: 5px; border-radius: 50%; }
 .cal-dot.todo { background: var(--todo-c); }
 .cal-dot.in-progress { background: var(--prog-c); }
 .cal-dot.done { background: var(--done-c); }
-
+ 
 .cal-task-list { margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px; }
-
+ 
 .cal-task-item {
   display: flex; align-items: center; gap: 10px; padding: 8px 12px;
   border-radius: 8px; margin-bottom: 4px; background: var(--surface2);
   font-size: 13px; border: 1px solid var(--border);
 }
-
+ 
 /* ── Toast ── */
 .toast-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 6px; z-index: 999; }
-
+ 
 .toast {
   background: var(--surface2); border: 1px solid var(--border2);
   border-radius: 10px; padding: 10px 16px; font-size: 13px;
   display: flex; align-items: center; gap: 8px;
   animation: toastIn 0.25s ease; box-shadow: var(--shadow-md); min-width: 200px;
 }
-
+ 
 @keyframes toastIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
 .toast.success { border-left: 3px solid var(--done-c); }
 .toast.error { border-left: 3px solid var(--high-c); }
 .toast.info { border-left: 3px solid var(--accent); }
-
+ 
 @media (max-width: 768px) {
   .layout { flex-direction: column; }
   .sidebar { width: 100%; height: auto; position: relative; flex-direction: row; flex-wrap: wrap; padding: 10px 12px; gap: 4px; }
@@ -451,14 +451,14 @@ input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
 </head>
 <body>
 <div class="layout">
-
+ 
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="brand">
       <div class="brand-name">Task<span>flow</span></div>
       <div class="brand-sub">Project manager</div>
     </div>
-
+ 
     <span class="nav-label">Views</span>
     <div class="nav-item active" onclick="showPage('tasks', this)">
       <span class="nav-icon">◈</span> All Tasks
@@ -467,7 +467,7 @@ input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
     <div class="nav-item" onclick="showPage('calendar', this)">
       <span class="nav-icon">▦</span> Calendar
     </div>
-
+ 
     <span class="nav-label" style="margin-top:14px">Filter</span>
     <div class="nav-item" onclick="sidebarFilter('todo', this)">
       <span class="nav-icon">○</span> To Do
@@ -482,9 +482,9 @@ input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
       <span class="nav-count" id="nav-count-done">0</span>
     </div>
   </aside>
-
+ 
   <main class="main">
-
+ 
     <!-- Tasks Page -->
     <div class="page active" id="page-tasks">
       <div class="page-header">
@@ -496,7 +496,7 @@ input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
           <span id="form-icon">＋</span> New Task
         </button>
       </div>
-
+ 
       <div class="stats-row">
         <div class="stat-card">
           <div class="stat-num" id="stat-total">—</div>
@@ -515,7 +515,7 @@ input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
           <div class="stat-lbl">Done</div>
         </div>
       </div>
-
+ 
       <div class="form-card" id="create-form" style="display:none">
         <div class="form-grid three">
           <div class="form-group form-full">
@@ -548,7 +548,7 @@ input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
           <button class="btn btn-primary" onclick="createTask()">Create Task</button>
         </div>
       </div>
-
+ 
       <div class="toolbar">
         <span style="font-size:11px;color:var(--text-light);font-weight:600;text-transform:uppercase;letter-spacing:0.8px">Filter:</span>
         <button class="chip active" onclick="setChipFilter('all',this)">All</button>
@@ -556,12 +556,12 @@ input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
         <button class="chip" onclick="setChipFilter('in-progress',this)">In Progress</button>
         <button class="chip" onclick="setChipFilter('done',this)">Done</button>
       </div>
-
+ 
       <div class="task-list" id="task-list">
         <div class="empty"><div class="empty-icon">◌</div><div class="empty-title">Loading tasks…</div></div>
       </div>
     </div>
-
+ 
     <!-- Calendar Page -->
     <div class="page" id="page-calendar">
       <div class="page-header">
@@ -582,29 +582,29 @@ input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
         <div class="cal-task-list" id="cal-task-list" style="display:none"></div>
       </div>
     </div>
-
+ 
   </main>
 </div>
-
+ 
 <div class="toast-container" id="toasts"></div>
-
+ 
 <script>
 let allTasks = [];
 let chipFilter = 'all';
 const today = new Date();
 let calYear = today.getFullYear(), calMonth = today.getMonth();
-
+ 
 async function api(path, opts = {}) {
   const res = await fetch(path, { headers: {'Content-Type':'application/json'}, ...opts });
   return res.json();
 }
-
+ 
 async function load() {
   const d = await api('/api/tasks');
   allTasks = d.data || [];
   updateStats(); render(); renderCal();
 }
-
+ 
 function updateStats() {
   const todo = allTasks.filter(t => t.status === 'todo').length;
   const prog = allTasks.filter(t => t.status === 'in-progress').length;
@@ -622,7 +622,7 @@ function updateStats() {
   document.getElementById('tasks-subtitle').textContent =
     `${allTasks.length} tasks · ${done} completed${overdue ? ` · ⚠ ${overdue} overdue` : ''}`;
 }
-
+ 
 function render() {
   const list = document.getElementById('task-list');
   const tasks = chipFilter === 'all' ? allTasks : allTasks.filter(t => t.status === chipFilter);
@@ -633,7 +633,7 @@ function render() {
   list.innerHTML = tasks.map(t => taskHTML(t)).join('');
   initDrag();
 }
-
+ 
 function taskHTML(t) {
   const dl = t.deadline ? new Date(t.deadline + 'T00:00:00') : null;
   const now = new Date(); now.setHours(0,0,0,0);
@@ -649,9 +649,9 @@ function taskHTML(t) {
       dlHTML = `<span class="meta-tag">📅 ${fmtDate(t.deadline)}</span>`;
     }
   }
-
+ 
   const assignees = t.assignees ? t.assignees.split(',').map(a => a.trim()).filter(Boolean) : [];
-
+ 
   return `
   <div class="task-card status-${t.status}" id="card-${t.id}" draggable="true" data-id="${t.id}">
     <div class="drag-handle" title="Drag to reorder">⠿</div>
@@ -712,7 +712,7 @@ function taskHTML(t) {
     </div>
   </div>`;
 }
-
+ 
 async function createTask() {
   const title = document.getElementById('new-title').value.trim();
   if (!title) { toast('Title is required', 'error'); return; }
@@ -734,7 +734,7 @@ async function createTask() {
     toast('Task created!', 'success');
   } else toast(d.message, 'error');
 }
-
+ 
 async function cycleStatus(id) {
   const t = allTasks.find(x => x.id === id);
   if (!t) return;
@@ -747,7 +747,7 @@ async function cycleStatus(id) {
     toast(`→ ${statusLabel(next)}`, 'success');
   }
 }
-
+ 
 async function update(id) {
   const d = await api(`/api/tasks/${id}`, {
     method: 'PUT',
@@ -767,7 +767,7 @@ async function update(id) {
     toast('Saved!', 'success');
   } else toast(d.message, 'error');
 }
-
+ 
 async function del(id) {
   const d = await api(`/api/tasks/${id}`, { method: 'DELETE' });
   if (d.success) {
@@ -776,7 +776,7 @@ async function del(id) {
     toast('Deleted', 'info');
   }
 }
-
+ 
 // Drag & drop
 let dragId = null;
 function initDrag() {
@@ -807,29 +807,29 @@ function initDrag() {
     });
   });
 }
-
+ 
 async function saveOrder() {
   const ids = [...document.getElementById('task-list').querySelectorAll('.task-card')].map(c => c.dataset.id);
   await api('/api/tasks/reorder', { method: 'PATCH', body: JSON.stringify({ ids }) });
 }
-
+ 
 // Calendar
 function renderCal() {
   const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   document.getElementById('cal-month-label').textContent = `${months[calMonth]} ${calYear}`;
   const grid = document.getElementById('cal-grid');
   let html = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => `<div class="cal-dow">${d}</div>`).join('');
-
+ 
   const first = new Date(calYear, calMonth, 1).getDay();
   const days = new Date(calYear, calMonth + 1, 0).getDate();
   const prevDays = new Date(calYear, calMonth, 0).getDate();
-
+ 
   const byDate = {};
   allTasks.forEach(t => { if (t.deadline) { const k = t.deadline.slice(0,10); (byDate[k] = byDate[k]||[]).push(t); } });
-
+ 
   for (let i = first - 1; i >= 0; i--)
     html += `<div class="cal-day other-month"><div class="cal-day-num">${prevDays-i}</div></div>`;
-
+ 
   const todayStr = today.toISOString().slice(0,10);
   for (let d = 1; d <= days; d++) {
     const ds = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
@@ -839,22 +839,22 @@ function renderCal() {
       <div class="cal-task-dots">${tasks.slice(0,4).map(t=>`<div class="cal-dot ${t.status}"></div>`).join('')}</div>
     </div>`;
   }
-
+ 
   const remaining = (first + days) % 7;
   if (remaining) for (let d = 1; d <= 7 - remaining; d++)
     html += `<div class="cal-day other-month"><div class="cal-day-num">${d}</div></div>`;
-
+ 
   grid.innerHTML = html;
   document.getElementById('cal-task-list').style.display = 'none';
 }
-
+ 
 function calNav(dir) {
   calMonth += dir;
   if (calMonth > 11) { calMonth = 0; calYear++; }
   if (calMonth < 0) { calMonth = 11; calYear--; }
   renderCal();
 }
-
+ 
 function showCalDay(ds) {
   const tasks = allTasks.filter(t => t.deadline && t.deadline.slice(0,10) === ds);
   const panel = document.getElementById('cal-task-list');
@@ -867,7 +867,7 @@ function showCalDay(ds) {
       <span>${esc(t.title)}</span>
     </div>`).join('');
 }
-
+ 
 // UI
 let formOpen = false;
 function toggleForm() {
@@ -876,12 +876,12 @@ function toggleForm() {
   document.getElementById('form-icon').textContent = formOpen ? '✕' : '＋';
   if (formOpen) setTimeout(() => document.getElementById('new-title').focus(), 50);
 }
-
+ 
 function toggleEdit(id) {
   document.querySelectorAll('.task-edit').forEach(e => { if (e.id !== `edit-${id}`) e.classList.remove('open'); });
   document.getElementById(`edit-${id}`).classList.toggle('open');
 }
-
+ 
 function showPage(page, el) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById(`page-${page}`).classList.add('active');
@@ -889,7 +889,7 @@ function showPage(page, el) {
   el.classList.add('active');
   if (page === 'calendar') renderCal();
 }
-
+ 
 function sidebarFilter(status, el) {
   chipFilter = status;
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
@@ -898,18 +898,18 @@ function sidebarFilter(status, el) {
   showPage('tasks', el);
   render();
 }
-
+ 
 function setChipFilter(f, el) {
   chipFilter = f;
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
   render();
 }
-
+ 
 function statusLabel(s) { return {todo:'To Do','in-progress':'In Progress',done:'Done'}[s]||s; }
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fmtDate(d) { return new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'}); }
-
+ 
 function toast(msg, type='success') {
   const c = document.getElementById('toasts');
   const t = document.createElement('div');
@@ -918,14 +918,14 @@ function toast(msg, type='success') {
   c.appendChild(t);
   setTimeout(() => t.remove(), 2800);
 }
-
+ 
 document.addEventListener('keydown', e => {
   if (e.key==='Escape') {
     if (formOpen) toggleForm();
     document.querySelectorAll('.task-edit.open').forEach(el => el.classList.remove('open'));
   }
 });
-
+ 
 load();
 </script>
 </body>
