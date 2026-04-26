@@ -1,1 +1,529 @@
-.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taskflow — CRUD Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3d;
+    --accent: #7c5cfc;
+    --accent2: #fc5c7d;
+    --text: #e8e8f0;
+    --text-dim: #7070a0;
+    --todo: #4a9eff;
+    --progress: #ffb347;
+    --done: #4ade80;
+    --high: #fc5c7d;
+    --medium: #ffb347;
+    --low: #4a9eff;
+    --radius: 12px;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,92,252,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,92,252,0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    padding: 36px 0 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .logo { display: flex; align-items: center; gap: 12px; }
+
+  .logo-mark {
+    width: 42px; height: 42px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+
+  h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 3px;
+  }
+
+  .db-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: rgba(74,222,128,0.1);
+    border: 1px solid rgba(74,222,128,0.2);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--done);
+  }
+
+  .db-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--done); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  .stats-bar {
+    display: flex; gap: 1px;
+    margin: 28px 0;
+    background: var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .stat {
+    flex: 1; background: var(--surface);
+    padding: 16px 20px;
+    display: flex; flex-direction: column; gap: 4px;
+    transition: background 0.2s;
+  }
+  .stat:hover { background: var(--surface2); }
+  .stat-value { font-size: 28px; font-weight: 800; line-height: 1; }
+  .stat-label { font-family: var(--mono); font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 28px;
+    animation: slideDown 0.3s ease;
+  }
+
+  @keyframes slideDown { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
+
+  .form-title { font-size: 13px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; font-family: var(--mono); }
+
+  .form-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .form-col { flex: 1; min-width: 200px; }
+  .form-group { margin-bottom: 14px; }
+
+  label { display: block; font-size: 11px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; font-family: var(--mono); }
+
+  input, textarea, select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,92,252,0.15); }
+  select option { background: var(--surface); }
+  textarea { resize: vertical; min-height: 72px; }
+
+  .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 10px 18px; border-radius: 8px;
+    font-family: var(--sans); font-size: 13px; font-weight: 700;
+    cursor: pointer; border: none; transition: all 0.15s;
+    letter-spacing: 0.3px;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #9070ff; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(124,92,252,0.4); }
+  .btn-ghost { background: transparent; color: var(--text-dim); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--text-dim); color: var(--text); }
+  .btn-danger { background: rgba(252,92,125,0.1); color: var(--accent2); border: 1px solid rgba(252,92,125,0.2); }
+  .btn-danger:hover { background: rgba(252,92,125,0.2); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-new { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; }
+  .btn-new:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(124,92,252,0.5); }
+
+  .filter-bar { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+  .filter-label { font-family: var(--mono); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; margin-right: 4px; }
+
+  .chip {
+    padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 600;
+    border: 1px solid var(--border); background: transparent; color: var(--text-dim);
+    cursor: pointer; transition: all 0.15s; font-family: var(--mono);
+  }
+  .chip:hover { border-color: var(--accent); color: var(--text); }
+  .chip.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+  .task-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .task-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: start;
+    transition: all 0.2s;
+    animation: fadeIn 0.25s ease;
+    border-left: 3px solid transparent;
+  }
+
+  @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+  .task-card:hover { border-color: var(--accent); border-left-color: var(--accent); background: var(--surface2); }
+  .task-card.status-todo { border-left-color: var(--todo); }
+  .task-card.status-in-progress { border-left-color: var(--progress); }
+  .task-card.status-done { border-left-color: var(--done); }
+
+  .task-title { font-size: 15px; font-weight: 700; margin-bottom: 5px; line-height: 1.3; }
+  .task-desc { font-size: 13px; color: var(--text-dim); line-height: 1.5; margin-bottom: 10px; }
+  .task-meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+  .badge { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.5px; }
+  .badge-todo { background: rgba(74,158,255,0.15); color: var(--todo); }
+  .badge-in-progress { background: rgba(255,179,71,0.15); color: var(--progress); }
+  .badge-done { background: rgba(74,222,128,0.15); color: var(--done); }
+  .badge-high { background: rgba(252,92,125,0.12); color: var(--high); }
+  .badge-medium { background: rgba(255,179,71,0.12); color: var(--medium); }
+  .badge-low { background: rgba(74,158,255,0.12); color: var(--low); }
+
+  .task-date { font-family: var(--mono); font-size: 11px; color: var(--text-dim); margin-left: auto; }
+  .task-actions { display: flex; gap: 6px; align-items: center; }
+
+  .task-edit-form { display: none; grid-column: 1 / -1; border-top: 1px solid var(--border); padding-top: 14px; margin-top: 4px; }
+  .task-edit-form.open { display: block; }
+
+  .empty { text-align: center; padding: 80px 20px; color: var(--text-dim); }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+  .empty-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .empty-sub { font-size: 13px; font-family: var(--mono); }
+
+  .toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 1000; }
+
+  .toast {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 18px; font-size: 13px; font-weight: 600;
+    display: flex; align-items: center; gap: 10px;
+    animation: slideUp 0.3s ease; min-width: 240px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  @keyframes slideUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  .toast.success { border-left: 3px solid var(--done); }
+  .toast.error { border-left: 3px solid var(--high); }
+  .toast.info { border-left: 3px solid var(--accent); }
+
+  .api-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-top: 40px; overflow: hidden; }
+  .api-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .api-title { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+  .api-routes { padding: 16px 20px; display: flex; flex-direction: column; gap: 8px; }
+
+  .api-route { display: flex; align-items: center; gap: 12px; font-family: var(--mono); font-size: 12px; padding: 8px 12px; border-radius: 6px; background: var(--bg); border: 1px solid var(--border); }
+
+  .method { font-weight: 700; min-width: 46px; text-align: center; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
+  .GET { background: rgba(74,158,255,0.15); color: var(--todo); }
+  .POST { background: rgba(74,222,128,0.15); color: var(--done); }
+  .PUT { background: rgba(255,179,71,0.15); color: var(--progress); }
+  .DELETE { background: rgba(252,92,125,0.15); color: var(--high); }
+
+  .route-path { color: var(--text); }
+  .route-desc { color: var(--text-dim); margin-left: auto; }
+
+  footer { padding: 40px 0 32px; text-align: center; font-family: var(--mono); font-size: 11px; color: var(--text-dim); letter-spacing: 0.5px; }
+  footer a { color: var(--accent); text-decoration: none; }
+
+  @media (max-width: 600px) {
+    .stats-bar { flex-direction: column; gap: 1px; }
+    .task-card { grid-template-columns: 1fr; }
+    .task-actions { justify-content: flex-end; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="logo">
+      <div class="logo-mark">⚡</div>
+      <div>
+        <h1>Task<span>flow</span></h1>
+        <div class="subtitle">CRUD App — Express + PostgreSQL</div>
+      </div>
+    </div>
+    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+      <div class="db-badge"><div class="db-dot"></div> PostgreSQL</div>
+      <button class="btn btn-new" onclick="toggleForm()">
+        <span id="form-btn-icon">＋</span> New Task
+      </button>
+    </div>
+  </header>
+
+  <div class="stats-bar">
+    <div class="stat"><div class="stat-value" id="stat-total">—</div><div class="stat-label">Total</div></div>
+    <div class="stat"><div class="stat-value" style="color:var(--todo)" id="stat-todo">—</div><div class="stat-label">To Do</div></div>
+    <div class="stat"><div class="stat-value" style="color:var(--progress)" id="stat-progress">—</div><div class="stat-label">In Progress</div></div>
+    <div class="stat"><div class="stat-value" style="color:var(--done)" id="stat-done">—</div><div class="stat-label">Done</div></div>
+  </div>
+
+  <div class="form-card" id="create-form" style="display:none">
+    <div class="form-title">// Create New Task</div>
+    <div class="form-row">
+      <div class="form-col">
+        <div class="form-group">
+          <label>Title *</label>
+          <input type="text" id="new-title" placeholder="What needs to be done?" />
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="new-desc" placeholder="Optional details..."></textarea>
+        </div>
+      </div>
+      <div class="form-col" style="max-width:180px; min-width:140px;">
+        <div class="form-group">
+          <label>Priority</label>
+          <select id="new-priority">
+            <option value="high">🔴 High</option>
+            <option value="medium" selected>🟡 Medium</option>
+            <option value="low">🔵 Low</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="toggleForm()">Cancel</button>
+      <button class="btn btn-primary" onclick="createTask()">Create Task</button>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <span class="filter-label">Filter:</span>
+    <button class="chip active" onclick="setFilter('all', this)">All</button>
+    <button class="chip" onclick="setFilter('todo', this)">To Do</button>
+    <button class="chip" onclick="setFilter('in-progress', this)">In Progress</button>
+    <button class="chip" onclick="setFilter('done', this)">Done</button>
+  </div>
+
+  <div class="task-list" id="task-list">
+    <div class="empty"><div class="empty-icon">⏳</div><div class="empty-title">Loading tasks...</div></div>
+  </div>
+
+  <div class="api-panel">
+    <div class="api-header">
+      <div class="db-dot"></div>
+      <div class="api-title">REST API Endpoints</div>
+    </div>
+    <div class="api-routes">
+      <div class="api-route"><span class="method GET">GET</span><span class="route-path">/api/tasks</span><span class="route-desc">List all tasks</span></div>
+      <div class="api-route"><span class="method GET">GET</span><span class="route-path">/api/tasks/:id</span><span class="route-desc">Get single task</span></div>
+      <div class="api-route"><span class="method POST">POST</span><span class="route-path">/api/tasks</span><span class="route-desc">Create task</span></div>
+      <div class="api-route"><span class="method PUT">PUT</span><span class="route-path">/api/tasks/:id</span><span class="route-desc">Update task</span></div>
+      <div class="api-route"><span class="method DELETE">DELETE</span><span class="route-path">/api/tasks/:id</span><span class="route-desc">Delete task</span></div>
+      <div class="api-route"><span class="method GET">GET</span><span class="route-path">/health</span><span class="route-desc">Health check</span></div>
+    </div>
+  </div>
+
+  <footer>
+    Built with Express.js + PostgreSQL (Supabase) · Deployed on <a href="https://render.com" target="_blank">Render</a>
+  </footer>
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<script>
+  let allTasks = [];
+  let currentFilter = 'all';
+
+  function toast(msg, type = 'info') {
+    const c = document.getElementById('toasts');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.textContent = ({success:'✓ ', error:'✗ ', info:'● '}[type]) + msg;
+    c.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+  }
+
+  async function apiFetch(path, opts = {}) {
+    const res = await fetch(path, { headers: {'Content-Type':'application/json'}, ...opts });
+    return res.json();
+  }
+
+  async function loadTasks() {
+    const data = await apiFetch('/api/tasks');
+    allTasks = data.data || [];
+    updateStats();
+    renderTasks();
+  }
+
+  function updateStats() {
+    document.getElementById('stat-total').textContent = allTasks.length;
+    document.getElementById('stat-todo').textContent = allTasks.filter(t => t.status === 'todo').length;
+    document.getElementById('stat-progress').textContent = allTasks.filter(t => t.status === 'in-progress').length;
+    document.getElementById('stat-done').textContent = allTasks.filter(t => t.status === 'done').length;
+  }
+
+  function setFilter(f, el) {
+    currentFilter = f;
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    renderTasks();
+  }
+
+  function renderTasks() {
+    const filtered = currentFilter === 'all' ? allTasks : allTasks.filter(t => t.status === currentFilter);
+    const list = document.getElementById('task-list');
+    if (!filtered.length) {
+      list.innerHTML = `<div class="empty"><div class="empty-icon">✦</div><div class="empty-title">No tasks here</div><div class="empty-sub">Add one with the "+ New Task" button</div></div>`;
+      return;
+    }
+    list.innerHTML = filtered.map(task => `
+      <div class="task-card status-${task.status}" id="card-${task.id}">
+        <div>
+          <div class="task-title">${esc(task.title)}</div>
+          ${task.description ? `<div class="task-desc">${esc(task.description)}</div>` : ''}
+          <div class="task-meta">
+            <span class="badge badge-${task.status}">${statusLabel(task.status)}</span>
+            <span class="badge badge-${task.priority}">${task.priority}</span>
+            <span class="task-date">${formatDate(task.created_at)}</span>
+          </div>
+        </div>
+        <div class="task-actions">
+          <button class="btn btn-ghost btn-sm" onclick="toggleEditForm('${task.id}')">✎ Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteTask('${task.id}')">✕</button>
+        </div>
+        <div class="task-edit-form" id="edit-${task.id}">
+          <div class="form-row" style="margin-bottom:10px">
+            <div class="form-col">
+              <div class="form-group"><label>Title</label><input type="text" id="edit-title-${task.id}" value="${esc(task.title)}" /></div>
+              <div class="form-group"><label>Description</label><textarea id="edit-desc-${task.id}">${esc(task.description)}</textarea></div>
+            </div>
+            <div class="form-col" style="max-width:160px; min-width:130px;">
+              <div class="form-group">
+                <label>Status</label>
+                <select id="edit-status-${task.id}">
+                  <option value="todo" ${task.status==='todo'?'selected':''}>To Do</option>
+                  <option value="in-progress" ${task.status==='in-progress'?'selected':''}>In Progress</option>
+                  <option value="done" ${task.status==='done'?'selected':''}>Done</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Priority</label>
+                <select id="edit-priority-${task.id}">
+                  <option value="high" ${task.priority==='high'?'selected':''}>🔴 High</option>
+                  <option value="medium" ${task.priority==='medium'?'selected':''}>🟡 Medium</option>
+                  <option value="low" ${task.priority==='low'?'selected':''}>🔵 Low</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-ghost btn-sm" onclick="toggleEditForm('${task.id}')">Cancel</button>
+            <button class="btn btn-primary btn-sm" onclick="updateTask('${task.id}')">Save Changes</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function createTask() {
+    const title = document.getElementById('new-title').value.trim();
+    if (!title) { toast('Title is required', 'error'); return; }
+    const data = await apiFetch('/api/tasks', {
+      method: 'POST',
+      body: JSON.stringify({ title, description: document.getElementById('new-desc').value.trim(), priority: document.getElementById('new-priority').value })
+    });
+    if (data.success) {
+      allTasks.unshift(data.data);
+      updateStats(); renderTasks();
+      document.getElementById('new-title').value = '';
+      document.getElementById('new-desc').value = '';
+      toggleForm();
+      toast('Task created!', 'success');
+    } else toast(data.message, 'error');
+  }
+
+  async function updateTask(id) {
+    const data = await apiFetch(`/api/tasks/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        title: document.getElementById(`edit-title-${id}`).value.trim(),
+        description: document.getElementById(`edit-desc-${id}`).value.trim(),
+        status: document.getElementById(`edit-status-${id}`).value,
+        priority: document.getElementById(`edit-priority-${id}`).value,
+      })
+    });
+    if (data.success) {
+      const idx = allTasks.findIndex(t => t.id === id);
+      if (idx !== -1) allTasks[idx] = data.data;
+      updateStats(); renderTasks();
+      toast('Task updated!', 'success');
+    } else toast(data.message, 'error');
+  }
+
+  async function deleteTask(id) {
+    const data = await apiFetch(`/api/tasks/${id}`, { method: 'DELETE' });
+    if (data.success) {
+      allTasks = allTasks.filter(t => t.id !== id);
+      updateStats(); renderTasks();
+      toast('Task deleted', 'info');
+    } else toast(data.message, 'error');
+  }
+
+  let formOpen = false;
+  function toggleForm() {
+    formOpen = !formOpen;
+    document.getElementById('create-form').style.display = formOpen ? 'block' : 'none';
+    document.getElementById('form-btn-icon').textContent = formOpen ? '✕' : '＋';
+    if (formOpen) document.getElementById('new-title').focus();
+  }
+
+  function toggleEditForm(id) {
+    document.querySelectorAll('.task-edit-form').forEach(f => { if (f.id !== `edit-${id}`) f.classList.remove('open'); });
+    document.getElementById(`edit-${id}`).classList.toggle('open');
+  }
+
+  function statusLabel(s) { return {todo:'To Do','in-progress':'In Progress',done:'Done'}[s]||s; }
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function formatDate(d) { return new Date(d).toLocaleDateString('en-GB', {day:'numeric',month:'short'}); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { if (formOpen) toggleForm(); document.querySelectorAll('.task-edit-form.open').forEach(f => f.classList.remove('open')); }
+  });
+
+  loadTasks();
+</script>
+</body>
+</html>
