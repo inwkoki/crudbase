@@ -495,12 +495,13 @@ async function load(){
   updateStats(); renderMatrix(); renderCal();
 }
 
-// ── quadrant logic — FIXED ─────────────────────
-// Priority: use stored quadrant first, then infer
+// ── quadrant logic ─────────────────────────────
 function quadrantOf(t){
-  // stored quadrant field
+  // 1. use stored quadrant if valid
   if(t.quadrant && ['q1','q2','q3','q4'].includes(t.quadrant)) return t.quadrant;
-  // infer from priority + deadline urgency
+  // 2. infer: if priority is stored as q1/q2/q3/q4 (old data migration)
+  if(t.priority && ['q1','q2','q3','q4'].includes(t.priority)) return t.priority;
+  // 3. infer from deadline urgency + priority level
   const now=new Date(); now.setHours(0,0,0,0);
   const dl=t.deadline ? new Date(t.deadline+'T00:00:00') : null;
   const urgent = dl && ((dl-now)/86400000) <= 3;
@@ -508,7 +509,7 @@ function quadrantOf(t){
   if(urgent && important)  return 'q1';
   if(!urgent && important) return 'q2';
   if(urgent && !important) return 'q3';
-  return 'q4';
+  return 'q2'; // default to Schedule instead of Eliminate
 }
 
 // ── Stats + Pie ────────────────────────────────
@@ -599,7 +600,8 @@ function renderList(){
   const el=document.getElementById('flat-list');
   let tasks=listFilter==='all'?allTasks:allTasks.filter(t=>t.status===listFilter);
   if(!tasks.length){
-    el.innerHTML=`<div class="empty"><div class="empty-icon">◌</div><div class="empty-title">No tasks</div><div class="empty-sub">Go to Matrix view to add one</div></div>`;
+    const msg=listFilter==='all'?'No tasks yet — add one from Matrix view':'No tasks with this status';
+    el.innerHTML=`<div class="empty"><div class="empty-icon">◌</div><div class="empty-title">${msg}</div></div>`;
     return;
   }
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:6px">${tasks.map(t=>taskHTML(t)).join('')}</div>`;
