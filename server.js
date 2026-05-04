@@ -15,7 +15,6 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false },
 });
 
-// Initialize Database with correct columns for Metrics logic
 async function initDB() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS tasks (
@@ -24,21 +23,21 @@ async function initDB() {
       description TEXT DEFAULT '',
       status TEXT DEFAULT 'todo' CHECK (status IN ('todo','in-progress','done')),
       priority TEXT DEFAULT 'medium' CHECK (priority IN ('low','medium','high')),
-      quadrant TEXT DEFAULT 'q2' CHECK (quadrant IN ('q1','q2','q3','q4')),
       deadline DATE,
       assignees TEXT DEFAULT '',
+      quadrant TEXT DEFAULT 'q2',
       sort_order INTEGER DEFAULT 0,
       created_at TIMESTAMP DEFAULT NOW()
     );
   `);
-  
-  // Ensure existing databases have the new columns[cite: 1]
-  await pool.query(`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS quadrant TEXT DEFAULT 'q2';`);
-  await pool.query(`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS deadline DATE;`);
-  await pool.query(`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS assignees TEXT DEFAULT '';`);
-  await pool.query(`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0;`);
 
-  // Avatars table
+  // Add columns for existing DBs
+  const cols = ['deadline DATE', 'assignees TEXT DEFAULT \'\'', 'quadrant TEXT DEFAULT \'q2\'', 'sort_order INTEGER DEFAULT 0'];
+  for (const col of cols) {
+    const name = col.split(' ')[0];
+    await pool.query(`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS ${col};`).catch(() => {});
+  }
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS avatars (
       name TEXT PRIMARY KEY,
@@ -46,18 +45,20 @@ async function initDB() {
       updated_at TIMESTAMP DEFAULT NOW()
     );
   `);
-  console.log('✅ Database ready & Schema updated');
+
+  console.log('✅ Database ready');
 }
 
-// ── Tasks API ──────────────────────────────────
+// ── Tasks ──────────────────────────────────────
 
 app.get('/api/tasks', async (req, res) => {
   try {
-    const { status, priority } = req.query;
+    const { status, priority, quadrant } = req.query;
     let query = 'SELECT * FROM tasks';
     const params = [], conditions = [];
     if (status)   { params.push(status);   conditions.push(`status = $${params.length}`); }
     if (priority) { params.push(priority); conditions.push(`priority = $${params.length}`); }
+    if (quadrant) { params.push(quadrant); conditions.push(`quadrant = $${params.length}`); }
     if (conditions.length) query += ' WHERE ' + conditions.join(' AND ');
     query += ' ORDER BY sort_order ASC, created_at DESC';
     const result = await pool.query(query, params);
@@ -73,47 +74,35 @@ app.get('/api/tasks/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// Fixed POST: Added 'status' and 'quadrant' to ensure metrics update[cite: 1]
 app.post('/api/tasks', async (req, res) => {
   try {
-    const { 
-      title, 
-      description = '', 
-      priority = 'medium', 
-      quadrant = 'q2', 
-      status = 'todo', 
-      deadline = null, 
-      assignees = '' 
-    } = req.body;
-
+    const { title, description = '', priority = 'medium', deadline = null, assignees = '', quadrant = 'q2' } = req.body;
     if (!title?.trim()) return res.status(400).json({ success: false, message: 'Title is required' });
-
     const result = await pool.query(
-      'INSERT INTO tasks (title, description, priority, quadrant, status, deadline, assignees) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
-      [title.trim(), description.trim(), priority, quadrant, status, deadline || null, assignees]
+      'INSERT INTO tasks (title, description, priority, deadline, assignees, quadrant) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
+      [title.trim(), description.trim(), priority, deadline || null, assignees, quadrant]
     );
     res.status(201).json({ success: true, data: result.rows[0] });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// Fixed PUT: Included 'quadrant' for updates[cite: 1]
 app.put('/api/tasks/:id', async (req, res) => {
   try {
-    const { title, description, status, priority, quadrant, deadline, assignees } = req.body;
+    const { title, description, status, priority, deadline, assignees, quadrant } = req.body;
     const fields = [], params = [];
-    if (title !== undefined)       { params.push(title);             fields.push(`title=$${params.length}`); }
-    if (description !== undefined) { params.push(description);       fields.push(`description=$${params.length}`); }
-    if (status !== undefined)      { params.push(status);            fields.push(`status=$${params.length}`); }
-    if (priority !== undefined)    { params.push(priority);          fields.push(`priority=$${params.length}`); }
-    if (quadrant !== undefined)    { params.push(quadrant);          fields.push(`quadrant=$${params.length}`); }
-    if (deadline !== undefined)    { params.push(deadline||null);    fields.push(`deadline=$${params.length}`); }
-    if (assignees !== undefined)   { params.push(assignees);         fields.push(`assignees=$${params.length}`); }
-
+    if (title !== undefined)       { params.push(title);           fields.push(`title=$${params.length}`); }
+    if (description !== undefined) { params.push(description);     fields.push(`description=$${params.length}`); }
+    if (status !== undefined)      { params.push(status);          fields.push(`status=$${params.length}`); }
+    if (priority !== undefined)    { params.push(priority);        fields.push(`priority=$${params.length}`); }
+    if (deadline !== undefined)    { params.push(deadline||null);  fields.push(`deadline=$${params.length}`); }
+    if (assignees !== undefined)   { params.push(assignees);       fields.push(`assignees=$${params.length}`); }
+    if (quadrant !== undefined)    { params.push(quadrant);        fields.push(`quadrant=$${params.length}`); }
     if (!fields.length) return res.status(400).json({ success: false, message: 'No fields to update' });
-    
     params.push(req.params.id);
-    const result = await pool.query(`UPDATE tasks SET ${fields.join(',')} WHERE id=$${params.length} RETURNING *`, params);
-    
+    const result = await pool.query(
+      `UPDATE tasks SET ${fields.join(',')} WHERE id=$${params.length} RETURNING *`,
+      params
+    );
     if (!result.rows.length) return res.status(404).json({ success: false, message: 'Task not found' });
     res.json({ success: true, data: result.rows[0] });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
@@ -136,7 +125,7 @@ app.delete('/api/tasks/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
-// ── Avatars API ────────────────────────────────
+// ── Avatars ────────────────────────────────────
 
 app.get('/api/avatars', async (req, res) => {
   try {
