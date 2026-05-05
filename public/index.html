@@ -492,7 +492,7 @@ function showLoading(msg){
     el=document.createElement('div');
     el.id='loading-overlay';
     el.style.cssText='position:fixed;inset:0;background:rgba(13,13,18,.92);z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:var(--sans)';
-    el.innerHTML='<div style="width:40px;height:40px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite"></div><div id="loading-msg" style="color:var(--text-dim);font-size:14px"></div>';
+    el.innerHTML='<div style="width:40px;height:40px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite"></div><div id="loading-msg" style="color:var(--text-dim);font-size:14px;text-align:center"></div><div style="color:var(--text-light);font-size:11.5px;text-align:center;max-width:280px;line-height:1.5">Render free tier อาจใช้เวลา ~30 วินาที ในการเริ่มต้น</div>';
     const s=document.createElement('style');s.textContent='@keyframes spin{to{transform:rotate(360deg)}}@keyframes popIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}';document.head.appendChild(s);
     document.body.appendChild(el);
   }
@@ -532,24 +532,49 @@ function showDBPausedPopup(){
 function hideDBPausedPopup(){const el=document.getElementById('db-paused-modal');if(el)el.style.display='none';}
 
 // ── API ────────────────────────────────────────
-async function api(path,opts={}){
-  const r=await fetch(path,{headers:{'Content-Type':'application/json'},...opts});
-  if(!r.ok){const err=await r.json().catch(()=>({}));throw Object.assign(new Error(err.message||'API error'),{status:r.status});}
-  return r.json();
+async function api(path,opts={},timeoutMs=12000){
+  const ctrl=new AbortController();
+  const tid=setTimeout(()=>ctrl.abort(),timeoutMs);
+  try{
+    const r=await fetch(path,{headers:{'Content-Type':'application/json'},signal:ctrl.signal,...opts});
+    clearTimeout(tid);
+    if(!r.ok){const err=await r.json().catch(()=>({}));throw Object.assign(new Error(err.message||'API error'),{status:r.status});}
+    return r.json();
+  }catch(err){
+    clearTimeout(tid);
+    if(err.name==='AbortError')throw Object.assign(new Error('Request timed out'),{status:0,timeout:true});
+    throw err;
+  }
 }
 
 async function load(){
   showLoading('Connecting to database…');
-  try{
-    const [td,av]=await Promise.all([api('/api/tasks'),api('/api/avatars')]);
-    hideLoading(); hideDBPausedPopup();
-    allTasks=td.data||[]; avatars=av.data||{};
-    updateStats(); renderMatrix(); renderCal();
-  }catch(err){
-    console.error('Load error:',err);
-    const s=err.status;
-    if(!s||s>=500||s===503||s===502){showDBPausedPopup();}
-    else{hideLoading();toast('Failed to load: '+err.message,'error');}
+  // Render free tier wakes up slowly — retry with countdown
+  let attempt=0;
+  const maxAttempts=3;
+  while(attempt<maxAttempts){
+    attempt++;
+    if(attempt>1) showLoading(`Still waking up… (${attempt}/${maxAttempts})`);
+    try{
+      const [td,av]=await Promise.all([api('/api/tasks'),api('/api/avatars')]);
+      hideLoading(); hideDBPausedPopup();
+      allTasks=td.data||[]; avatars=av.data||{};
+      updateStats(); renderMatrix(); renderCal();
+      return;
+    }catch(err){
+      console.error(`Load attempt ${attempt} failed:`,err);
+      const s=err.status;
+      // timeout or server error → might be Render waking up, retry once more
+      if(attempt<maxAttempts && (err.timeout||!s||s>=500)){
+        showLoading(`Waking up server… (${attempt}/${maxAttempts})`);
+        await new Promise(r=>setTimeout(r,3000));
+        continue;
+      }
+      // After all retries or definitive error → show popup
+      if(!s||s>=500||err.timeout){showDBPausedPopup();}
+      else{hideLoading();toast('Failed to load: '+err.message,'error');}
+      return;
+    }
   }
 }
 
