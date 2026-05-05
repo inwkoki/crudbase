@@ -557,9 +557,11 @@ async function load(){
     if(attempt>1) showLoading(`Still waking up… (${attempt}/${maxAttempts})`);
     try{
       const [td,av]=await Promise.all([api('/api/tasks'),api('/api/avatars')]);
-      hideLoading(); hideDBPausedPopup();
       allTasks=td.data||[]; avatars=av.data||{};
-      updateStats(); renderMatrix(); renderCal();
+      hideLoading(); hideDBPausedPopup();
+      try{ updateStats(); }catch(e){ console.error('updateStats error:',e); }
+      try{ renderMatrix(); }catch(e){ console.error('renderMatrix error:',e); }
+      try{ renderCal(); }catch(e){ console.error('renderCal error:',e); }
       return;
     }catch(err){
       console.error(`Load attempt ${attempt} failed:`,err);
@@ -635,29 +637,37 @@ function updateStats(){
 }
 
 function updatePie(w1, w2, w3, w4){
-  const ctx=document.getElementById('pie-chart').getContext('2d');
-  const data=[w1, w2, w3, w4];
-  const colors=['#fc5c7d', '#f5a623', '#5ba3f5', '#7878a0'];
-  if(pieChart){
-    pieChart.data.datasets[0].data=data;
-    pieChart.update('none');
-    return;
-  }
-  pieChart=new Chart(ctx,{
-    type:'doughnut',
-    data:{datasets:[{data,backgroundColor:colors,borderWidth:0,hoverOffset:4}]},
-    options:{
-      cutout:'72%',
-      animation:{duration:600,easing:'easeInOutQuart'},
-      plugins:{legend:{display:false},tooltip:{
-        callbacks:{label:ctx=>{
-          const labels=['Do First','Schedule','Delegate','Eliminate'];
-          return ` ${labels[ctx.dataIndex]}: ${ctx.raw} pts`;
-        }}
-      }},
-      responsive:true,maintainAspectRatio:true,
+  try{
+    const canvas=document.getElementById('pie-chart');
+    if(!canvas) return;
+    if(typeof Chart==='undefined') return;
+    const ctx=canvas.getContext('2d');
+    const data=[w1, w2, w3, w4];
+    // if all zero show empty placeholder
+    const total=data.reduce((a,b)=>a+b,0);
+    if(total===0){ data[3]=1; }
+    const colors=['#fc5c7d', '#f5a623', '#5ba3f5', '#7878a0'];
+    if(pieChart){
+      pieChart.data.datasets[0].data=data;
+      pieChart.update('none');
+      return;
     }
-  });
+    pieChart=new Chart(ctx,{
+      type:'doughnut',
+      data:{datasets:[{data,backgroundColor:colors,borderWidth:0,hoverOffset:4}]},
+      options:{
+        cutout:'72%',
+        animation:{duration:600,easing:'easeInOutQuart'},
+        plugins:{legend:{display:false},tooltip:{
+          callbacks:{label:ctx=>{
+            const labels=['Do First','Schedule','Delegate','Eliminate'];
+            return ` ${labels[ctx.dataIndex]}: ${ctx.raw} pts`;
+          }}
+        }},
+        responsive:true,maintainAspectRatio:true,
+      }
+    });
+  }catch(e){ console.error('Pie chart error:',e); }
 }
 
 // ── Render Matrix ──────────────────────────────
@@ -1042,7 +1052,7 @@ async function saveAvatar(){const name=document.getElementById('avatar-name').va
 async function delAvatar(name){const d=await api(`/api/avatars/${name}`,{method:'DELETE'});if(d.success){delete avatars[name];renderAvatarGrid();renderMatrix();toast('Removed','info');}}
 const zone=document.getElementById('upload-zone');
 zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('dragover');});
-zone.addEventListener('dragleave',()=>zone.classList.remove('dragover'););
+zone.addEventListener('dragleave',()=>zone.classList.remove('dragover'));
 zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('dragover');const f=e.dataTransfer.files[0];if(f){const inp=document.getElementById('file-input');const dt=new DataTransfer();dt.items.add(f);inp.files=dt.files;previewFile(inp);}});
 
 // ── UI ─────────────────────────────────────────
