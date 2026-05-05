@@ -62,7 +62,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .pie-title{font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.8px}
 .pie-wrap{position:relative;width:120px;height:120px}
 .pie-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
-.pie-pct{font-family:var(--serif);font-size:22px;font-weight:500;color:var(--done-c);line-height:1}
+.pie-pct{font-family:var(--serif);font-size:22px;font-weight:500;color:var(--text);line-height:1}
 .pie-pct-lbl{font-size:10px;color:var(--text-dim)}
 .pie-legend{display:flex;flex-direction:column;gap:3px;width:100%}
 .pie-leg-item{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--text-dim)}
@@ -299,6 +299,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
 
   <main class="main">
 
+    <!-- Matrix page -->
     <div class="page active" id="page-tasks">
       <div class="page-header">
         <div>
@@ -311,28 +312,31 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
         </div>
       </div>
 
+      <!-- Dashboard row: stats + pie -->
       <div class="dashboard-row">
         <div class="stat-card"><div class="stat-num" id="s-total">—</div><div class="stat-lbl">Total</div></div>
         <div class="stat-card"><div class="stat-num" style="color:var(--todo-c)" id="s-todo">—</div><div class="stat-lbl">To Do</div></div>
         <div class="stat-card"><div class="stat-num" style="color:var(--prog-c)" id="s-prog">—</div><div class="stat-lbl">In Progress</div></div>
         <div class="stat-card"><div class="stat-num" style="color:var(--done-c)" id="s-done">—</div><div class="stat-lbl">Done</div></div>
         <div class="pie-card">
-          <div class="pie-title">Progress</div>
+          <div class="pie-title">Priority Score</div>
           <div class="pie-wrap">
             <canvas id="pie-chart"></canvas>
             <div class="pie-center">
-              <div class="pie-pct" id="pie-pct">0%</div>
-              <div class="pie-pct-lbl">done</div>
+              <div class="pie-pct" id="pie-pct">0</div>
+              <div class="pie-pct-lbl">Total Score</div>
             </div>
           </div>
           <div class="pie-legend">
-            <div class="pie-leg-item"><div class="pie-leg-dot" style="background:var(--done-c)"></div>Done</div>
-            <div class="pie-leg-item"><div class="pie-leg-dot" style="background:var(--prog-c)"></div>In Progress</div>
-            <div class="pie-leg-item"><div class="pie-leg-dot" style="background:var(--todo-c)"></div>To Do</div>
+            <div class="pie-leg-item"><div class="pie-leg-dot" style="background:var(--q1)"></div>🔴 Do First (x2)</div>
+            <div class="pie-leg-item"><div class="pie-leg-dot" style="background:var(--q2)"></div>🟡 Schedule (x1.5)</div>
+            <div class="pie-leg-item"><div class="pie-leg-dot" style="background:var(--q3)"></div>🔵 Delegate (x1)</div>
+            <div class="pie-leg-item"><div class="pie-leg-dot" style="background:var(--q4)"></div>⚫ Eliminate (x0.5)</div>
           </div>
         </div>
       </div>
 
+      <!-- Create form -->
       <div class="form-card" id="create-form" style="display:none">
         <div class="form-grid three">
           <div class="form-group form-full"><label>Title *</label><input type="text" id="new-title" placeholder="What needs to be done?"/></div>
@@ -355,6 +359,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
         </div>
       </div>
 
+      <!-- Legend -->
       <div class="quadrant-hint">
         <div class="q-badge q1">🔴 Urgent + Important</div>
         <div class="q-badge q2">🟡 Not Urgent + Important</div>
@@ -362,6 +367,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
         <div class="q-badge q4">⚫ Not Urgent + Not Important</div>
       </div>
 
+      <!-- 4 Quadrant Matrix -->
       <div class="matrix">
         <div class="quadrant q1" id="quad-q1">
           <div class="quadrant-header"><div class="quadrant-title">🔴 Do First</div><span class="q-count" id="qc1">0</span></div>
@@ -385,6 +391,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
         </div>
       </div>
 
+      <!-- Completed section -->
       <div class="completed-section" id="completed-section" style="display:none">
         <div class="completed-header" onclick="toggleCompleted()">
           <div class="completed-title">✅ Completed <span id="done-count-badge" style="font-size:12px;font-weight:400;color:var(--text-dim)"></span></div>
@@ -394,6 +401,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
       </div>
     </div>
 
+    <!-- List page -->
     <div class="page" id="page-list">
       <div class="page-header">
         <div><div class="page-title">All Tasks</div><div class="page-subtitle" id="list-sub">—</div></div>
@@ -408,6 +416,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
       <div id="flat-list"></div>
     </div>
 
+    <!-- Calendar page -->
     <div class="page" id="page-calendar">
       <div class="page-header"><div><div class="page-title">Calendar</div><div class="page-subtitle">Tasks with deadlines</div></div></div>
       <div class="calendar-wrap">
@@ -431,6 +440,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
   </main>
 </div>
 
+<!-- Confirm delete -->
 <div class="confirm-bg" id="confirm-modal" style="display:none">
   <div class="confirm-box">
     <div class="confirm-icon">🗑️</div>
@@ -443,6 +453,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
   </div>
 </div>
 
+<!-- Avatar modal -->
 <div class="modal-bg" id="avatar-modal" style="display:none" onclick="closeAvatarModal(event)">
   <div class="modal">
     <div class="modal-title">Manage Avatars</div>
@@ -487,11 +498,8 @@ async function load(){
 
 // ── quadrant logic ─────────────────────────────
 function quadrantOf(t){
-  // 1. use stored quadrant if valid
   if(t.quadrant && ['q1','q2','q3','q4'].includes(t.quadrant)) return t.quadrant;
-  // 2. infer: if priority is stored as q1/q2/q3/q4 (old data migration)
   if(t.priority && ['q1','q2','q3','q4'].includes(t.priority)) return t.priority;
-  // 3. infer from deadline urgency + priority level
   const now=new Date(); now.setHours(0,0,0,0);
   const dl=t.deadline ? new Date(t.deadline.slice(0, 10)+'T00:00:00') : null;
   const urgent = dl && ((dl-now)/86400000) <= 3;
@@ -499,7 +507,7 @@ function quadrantOf(t){
   if(urgent && important)  return 'q1';
   if(!urgent && important) return 'q2';
   if(urgent && !important) return 'q3';
-  return 'q2'; // default to Schedule instead of Eliminate
+  return 'q2';
 }
 
 // ── Stats + Pie ────────────────────────────────
@@ -516,9 +524,11 @@ function updateStats(){
   document.getElementById('s-done').textContent=done.length;
   document.getElementById('nav-all').textContent=total;
 
+  let qCounts = {q1: 0, q2: 0, q3: 0, q4: 0};
+
   ['q1','q2','q3','q4'].forEach(q=>{
-    // count active only per quadrant
     const n=active.filter(t=>quadrantOf(t)===q).length;
+    qCounts[q] = n;
     document.getElementById(`nav-${q}`).textContent=n;
     document.getElementById(`qc${q[1]}`).textContent=n;
   });
@@ -529,16 +539,21 @@ function updateStats(){
   document.getElementById('tasks-sub').textContent=sub;
   const ls=document.getElementById('list-sub'); if(ls) ls.textContent=sub;
 
-  // Pie chart
-  const pct=total>0?Math.round(done.length/total*100):0;
-  document.getElementById('pie-pct').textContent=pct+'%';
-  updatePie(done.length, prog.length, todo.length);
+  // Calculate weighted score for Pie chart (Active tasks only)
+  const w1 = qCounts.q1 * 2;
+  const w2 = qCounts.q2 * 1.5;
+  const w3 = qCounts.q3 * 1;
+  const w4 = qCounts.q4 * 0.5;
+  const totalScore = w1 + w2 + w3 + w4;
+
+  document.getElementById('pie-pct').textContent=totalScore;
+  updatePie(w1, w2, w3, w4);
 }
 
-function updatePie(done,prog,todo){
+function updatePie(w1, w2, w3, w4){
   const ctx=document.getElementById('pie-chart').getContext('2d');
-  const data=[done,prog,todo];
-  const colors=['#4ade80','#f5a623','#5ba3f5'];
+  const data=[w1, w2, w3, w4];
+  const colors=['#fc5c7d', '#f5a623', '#5ba3f5', '#7878a0'];
   if(pieChart){
     pieChart.data.datasets[0].data=data;
     pieChart.update('none');
@@ -551,7 +566,10 @@ function updatePie(done,prog,todo){
       cutout:'72%',
       animation:{duration:600,easing:'easeInOutQuart'},
       plugins:{legend:{display:false},tooltip:{
-        callbacks:{label:ctx=>{const labels=['Done','In Progress','To Do'];return ` ${labels[ctx.dataIndex]}: ${ctx.raw}`;}}
+        callbacks:{label:ctx=>{
+          const labels=['Do First','Schedule','Delegate','Eliminate'];
+          return ` ${labels[ctx.dataIndex]}: ${ctx.raw} pts`;
+        }}
       }},
       responsive:true,maintainAspectRatio:true,
     }
@@ -574,7 +592,6 @@ function renderMatrix(){
     }
   });
 
-  // Completed section
   const sec=document.getElementById('completed-section');
   if(done.length){
     sec.style.display='block';
@@ -622,6 +639,8 @@ function taskHTML(t){
   }).join('')}</div>`:'';
 
   const q=quadrantOf(t);
+  
+  // Use data-title attribute to pass string safely to askDelete()
   return `<div class="task-card status-${t.status}" id="card-${t.id}" data-id="${t.id}">
     <div class="drag-handle">⠿</div>
     <div class="task-body">
@@ -635,7 +654,7 @@ function taskHTML(t){
     </div>
     <div class="task-actions">
       <button class="btn btn-ghost btn-sm" onclick="toggleEdit('${t.id}')">✎</button>
-      <button class="btn btn-danger btn-sm" onclick="askDelete('${t.id}',${JSON.stringify(esc(t.title))})">✕</button>
+      <button class="btn btn-danger btn-sm" data-title="${esc(t.title)}" onclick="askDelete('${t.id}', this.getAttribute('data-title'))">✕</button>
     </div>
     <div class="task-edit" id="edit-${t.id}">
       <div class="form-grid three" style="margin-bottom:10px">
