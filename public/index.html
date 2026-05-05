@@ -299,7 +299,6 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
 
   <main class="main">
 
-    <!-- Matrix page -->
     <div class="page active" id="page-tasks">
       <div class="page-header">
         <div>
@@ -312,7 +311,6 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
         </div>
       </div>
 
-      <!-- Dashboard row: stats + pie -->
       <div class="dashboard-row">
         <div class="stat-card"><div class="stat-num" id="s-total">—</div><div class="stat-lbl">Total</div></div>
         <div class="stat-card"><div class="stat-num" style="color:var(--todo-c)" id="s-todo">—</div><div class="stat-lbl">To Do</div></div>
@@ -335,7 +333,6 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
         </div>
       </div>
 
-      <!-- Create form -->
       <div class="form-card" id="create-form" style="display:none">
         <div class="form-grid three">
           <div class="form-group form-full"><label>Title *</label><input type="text" id="new-title" placeholder="What needs to be done?"/></div>
@@ -358,7 +355,6 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
         </div>
       </div>
 
-      <!-- Legend -->
       <div class="quadrant-hint">
         <div class="q-badge q1">🔴 Urgent + Important</div>
         <div class="q-badge q2">🟡 Not Urgent + Important</div>
@@ -366,7 +362,6 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
         <div class="q-badge q4">⚫ Not Urgent + Not Important</div>
       </div>
 
-      <!-- 4 Quadrant Matrix -->
       <div class="matrix">
         <div class="quadrant q1" id="quad-q1">
           <div class="quadrant-header"><div class="quadrant-title">🔴 Do First</div><span class="q-count" id="qc1">0</span></div>
@@ -390,7 +385,6 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
         </div>
       </div>
 
-      <!-- Completed section -->
       <div class="completed-section" id="completed-section" style="display:none">
         <div class="completed-header" onclick="toggleCompleted()">
           <div class="completed-title">✅ Completed <span id="done-count-badge" style="font-size:12px;font-weight:400;color:var(--text-dim)"></span></div>
@@ -400,7 +394,6 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
       </div>
     </div>
 
-    <!-- List page -->
     <div class="page" id="page-list">
       <div class="page-header">
         <div><div class="page-title">All Tasks</div><div class="page-subtitle" id="list-sub">—</div></div>
@@ -415,7 +408,6 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
       <div id="flat-list"></div>
     </div>
 
-    <!-- Calendar page -->
     <div class="page" id="page-calendar">
       <div class="page-header"><div><div class="page-title">Calendar</div><div class="page-subtitle">Tasks with deadlines</div></div></div>
       <div class="calendar-wrap">
@@ -439,7 +431,6 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
   </main>
 </div>
 
-<!-- Confirm delete -->
 <div class="confirm-bg" id="confirm-modal" style="display:none">
   <div class="confirm-box">
     <div class="confirm-icon">🗑️</div>
@@ -452,7 +443,6 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
   </div>
 </div>
 
-<!-- Avatar modal -->
 <div class="modal-bg" id="avatar-modal" style="display:none" onclick="closeAvatarModal(event)">
   <div class="modal">
     <div class="modal-title">Manage Avatars</div>
@@ -503,7 +493,7 @@ function quadrantOf(t){
   if(t.priority && ['q1','q2','q3','q4'].includes(t.priority)) return t.priority;
   // 3. infer from deadline urgency + priority level
   const now=new Date(); now.setHours(0,0,0,0);
-  const dl=t.deadline ? new Date(t.deadline+'T00:00:00') : null;
+  const dl=t.deadline ? new Date(t.deadline.slice(0, 10)+'T00:00:00') : null;
   const urgent = dl && ((dl-now)/86400000) <= 3;
   const important = t.priority==='high' || t.priority==='medium';
   if(urgent && important)  return 'q1';
@@ -534,7 +524,7 @@ function updateStats(){
   });
 
   const now=new Date(); now.setHours(0,0,0,0);
-  const ov=active.filter(t=>t.deadline&&new Date(t.deadline+'T00:00:00')<now).length;
+  const ov=active.filter(t=>t.deadline&&new Date(t.deadline.slice(0, 10)+'T00:00:00')<now).length;
   const sub=`${total} tasks · ${done.length} done${ov?` · ⚠ ${ov} overdue`:''}`;
   document.getElementById('tasks-sub').textContent=sub;
   const ls=document.getElementById('list-sub'); if(ls) ls.textContent=sub;
@@ -609,7 +599,7 @@ function renderList(){
 
 // ── Task HTML ──────────────────────────────────
 function taskHTML(t){
-  const dl=t.deadline ? new Date(t.deadline+'T00:00:00') : null;
+  const dl=t.deadline ? new Date(t.deadline.slice(0, 10)+'T00:00:00') : null;
   const now=new Date(); now.setHours(0,0,0,0);
   const diff=dl ? Math.round((dl-now)/86400000) : null;
   let dlHTML='';
@@ -662,7 +652,7 @@ function taskHTML(t){
           <option value="in-progress" ${t.status==='in-progress'?'selected':''}>In Progress</option>
           <option value="done" ${t.status==='done'?'selected':''}>Done</option>
         </select></div>
-        <div class="form-group"><label>Deadline</label><input type="date" id="edl-${t.id}" value="${t.deadline||''}"/></div>
+        <div class="form-group"><label>Deadline</label><input type="date" id="edl-${t.id}" value="${t.deadline?t.deadline.slice(0, 10):''}"/></div>
         <div class="form-group form-full"><label>Assignees</label><input type="text" id="ea-${t.id}" value="${esc(t.assignees||'')}"/></div>
       </div>
       <div class="form-actions">
@@ -677,7 +667,7 @@ function makeGCalUrl(t){
   const title=encodeURIComponent(t.title);
   const details=encodeURIComponent(t.description||'');
   let dates='';
-  if(t.deadline){const d=t.deadline.replace(/-/g,'');const nx=new Date(t.deadline+'T00:00:00');nx.setDate(nx.getDate()+1);const nd=nx.toISOString().slice(0,10).replace(/-/g,'');dates=`&dates=${d}/${nd}`;}
+  if(t.deadline){const dStr=t.deadline.slice(0, 10);const d=dStr.replace(/-/g,'');const nx=new Date(dStr+'T00:00:00');nx.setDate(nx.getDate()+1);const nd=nx.toISOString().slice(0,10).replace(/-/g,'');dates=`&dates=${d}/${nd}`;}
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}${dates}`;
 }
 
@@ -691,6 +681,7 @@ async function createTask(){
     title, description:document.getElementById('new-desc').value.trim(),
     priority:priMap[quad], deadline:document.getElementById('new-dl').value||null,
     assignees:document.getElementById('new-asgn').value.trim(), quadrant:quad,
+    status: 'todo'
   })});
   if(d.success){
     allTasks.unshift(d.data);
@@ -903,7 +894,7 @@ function scrollToQ(q,el){
 function setListFilter(f,el){listFilter=f;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderList();}
 function statusLabel(s){return{todo:'To Do','in-progress':'In Progress',done:'Done'}[s]||s;}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function fmtDateFull(d){return new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}
+function fmtDateFull(d){return new Date(d.slice(0, 10)+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}
 function toast(msg,type='success'){const c=document.getElementById('toasts');const t=document.createElement('div');t.className=`toast ${type}`;t.textContent=msg;c.appendChild(t);setTimeout(()=>t.remove(),2800);}
 
 document.addEventListener('keydown',e=>{
