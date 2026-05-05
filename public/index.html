@@ -116,6 +116,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
 .quadrant.q4 .quadrant-title{color:var(--q4)}
 .quadrant-sub{font-size:10.5px;color:var(--text-dim);font-weight:300;margin-bottom:6px}
 .q-count{font-size:11px;color:var(--text-dim);background:var(--surface3);border-radius:999px;padding:1px 7px}
+.q-list-container{display:flex;flex-direction:column;gap:6px;flex:1;min-height:40px;}
 
 /* Completed section */
 .completed-section{background:var(--surface);border:1px solid var(--done-border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
@@ -372,22 +373,22 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
         <div class="quadrant q1" id="quad-q1">
           <div class="quadrant-header"><div class="quadrant-title">🔴 Do First</div><span class="q-count" id="qc1">0</span></div>
           <div class="quadrant-sub">Urgent & Important</div>
-          <div id="q1-list" style="display:flex;flex-direction:column;gap:6px"></div>
+          <div class="q-list-container" id="q1-list"></div>
         </div>
         <div class="quadrant q2" id="quad-q2">
           <div class="quadrant-header"><div class="quadrant-title">🟡 Schedule</div><span class="q-count" id="qc2">0</span></div>
           <div class="quadrant-sub">Not Urgent & Important</div>
-          <div id="q2-list" style="display:flex;flex-direction:column;gap:6px"></div>
+          <div class="q-list-container" id="q2-list"></div>
         </div>
         <div class="quadrant q3" id="quad-q3">
           <div class="quadrant-header"><div class="quadrant-title">🔵 Delegate</div><span class="q-count" id="qc3">0</span></div>
           <div class="quadrant-sub">Urgent & Not Important</div>
-          <div id="q3-list" style="display:flex;flex-direction:column;gap:6px"></div>
+          <div class="q-list-container" id="q3-list"></div>
         </div>
         <div class="quadrant q4" id="quad-q4">
           <div class="quadrant-header"><div class="quadrant-title">⚫ Eliminate</div><span class="q-count" id="qc4">0</span></div>
           <div class="quadrant-sub">Not Urgent & Not Important</div>
-          <div id="q4-list" style="display:flex;flex-direction:column;gap:6px"></div>
+          <div class="q-list-container" id="q4-list"></div>
         </div>
       </div>
 
@@ -588,9 +589,11 @@ function renderMatrix(){
       el.innerHTML=`<div class="q-empty"><div class="q-empty-icon">✓</div><div>All clear!</div></div>`;
     } else {
       el.innerHTML=tasks.map(t=>taskHTML(t)).join('');
-      initDragIn(el);
     }
   });
+  
+  // Initialize cross-matrix drag on the whole matrix container
+  initDragIn();
 
   const sec=document.getElementById('completed-section');
   if(done.length){
@@ -640,7 +643,6 @@ function taskHTML(t){
 
   const q=quadrantOf(t);
   
-  // Use data-title attribute to pass string safely to askDelete()
   return `<div class="task-card status-${t.status}" id="card-${t.id}" data-id="${t.id}">
     <div class="drag-handle">⠿</div>
     <div class="task-body">
@@ -750,48 +752,127 @@ async function confirmDelete(){
 }
 
 // ── Drag & Drop ────────────────────────────────
-let dragId=null,clone=null,ghostEl=null;
-function initDragIn(container){
-  container.querySelectorAll('.task-card').forEach(card=>{
-    card.querySelector('.drag-handle').addEventListener('mousedown',e=>startDrag(e,card,container));
+let dragId=null,clone=null,ghostEl=null,origParent=null;
+function initDragIn(){
+  document.querySelectorAll('.matrix .task-card').forEach(card=>{
+    const handle = card.querySelector('.drag-handle');
+    handle.onmousedown = e => startDrag(e,card);
   });
 }
-function startDrag(e,card,container){
+
+function startDrag(e,card){
+  if(e.button !== 0) return; // ทำงานเฉพาะคลิกซ้าย
   e.preventDefault();
   dragId=card.dataset.id;
+  origParent=card.parentElement;
+  
   const rect=card.getBoundingClientRect();
   clone=card.cloneNode(true);
   clone.className='task-card drag-clone';
   clone.style.cssText=`width:${rect.width}px;left:${rect.left}px;top:${rect.top}px;`;
   document.body.appendChild(clone);
-  card.classList.add('drag-ghost'); ghostEl=card;
+  card.classList.add('drag-ghost'); 
+  ghostEl=card;
+  
   const ox=e.clientX-rect.left, oy=e.clientY-rect.top;
+
   function onMove(e){
     clone.style.left=(e.clientX-ox)+'px'; clone.style.top=(e.clientY-oy)+'px';
-    const cards=[...container.querySelectorAll('.task-card:not(.drag-ghost)')];
-    let target=null;
-    cards.forEach(c=>{const r=c.getBoundingClientRect();if(e.clientY>r.top&&e.clientY<r.bottom)target=c;});
-    if(target){
-      const all=[...container.querySelectorAll('.task-card')];
-      const gi=all.indexOf(ghostEl),ti=all.indexOf(target);
-      if(gi<ti)target.after(ghostEl); else target.before(ghostEl);
-      const order=[...container.querySelectorAll('.task-card')].map(c=>c.dataset.id);
-      allTasks.sort((a,b)=>order.indexOf(a.id)-order.indexOf(b.id));
+
+    // ตรวจสอบว่าเมาส์กำลังอยู่บน Quadrant ไหน
+    let targetList = null;
+    document.querySelectorAll('.quadrant').forEach(q => {
+      const r = q.getBoundingClientRect();
+      if(e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom){
+        targetList = q.querySelector('.q-list-container');
+      }
+    });
+
+    if(!targetList) return;
+
+    // ซ่อนข้อความ All clear ถ้าย้ายเข้าไปในกล่องเปล่า
+    targetList.querySelectorAll('.q-empty').forEach(el => el.style.display='none');
+
+    // หาตำแหน่งแทรกที่เหมาะสม
+    const cards=[...targetList.querySelectorAll('.task-card:not(.drag-ghost)')];
+    let targetCard=null;
+    
+    cards.forEach(c=>{
+      const r=c.getBoundingClientRect();
+      if(e.clientY>r.top && e.clientY<r.bottom) targetCard=c;
+    });
+
+    if(targetCard){
+      const r = targetCard.getBoundingClientRect();
+      const mid = r.top + r.height/2;
+      if(e.clientY < mid) targetCard.before(ghostEl);
+      else targetCard.after(ghostEl);
+    } else {
+      targetList.appendChild(ghostEl);
     }
   }
+
   function onUp(){
     const gr=ghostEl.getBoundingClientRect();
     clone.style.transition='all .2s cubic-bezier(.4,0,.2,1)';
     clone.style.left=gr.left+'px'; clone.style.top=gr.top+'px';
     clone.style.transform='scale(1) rotate(0deg)'; clone.style.opacity='0';
-    setTimeout(()=>{clone.remove();clone=null;ghostEl.classList.remove('drag-ghost');ghostEl=null;dragId=null;saveOrder();},200);
-    document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);
+
+    const newParent = ghostEl.parentElement;
+    const newQ = newParent.id.split('-')[0]; // e.g., 'q1'
+    const oldQ = origParent.id.split('-')[0];
+    const qLabels = {q1:'Do First', q2:'Schedule', q3:'Delegate', q4:'Eliminate'};
+
+    setTimeout(async ()=>{
+      clone.remove(); clone=null;
+      ghostEl.classList.remove('drag-ghost'); ghostEl=null;
+
+      // ถ้ามีการเปลี่ยน Quadrant ให้อัปเดตสถานะของ Task
+      if(newQ !== oldQ && qLabels[newQ]){
+         const task = allTasks.find(t => t.id === dragId);
+         if(task){
+            task.quadrant = newQ;
+            const priMap={q1:'high',q2:'medium',q3:'low',q4:'low'};
+            task.priority = priMap[newQ];
+
+            // อัปเดตไปยัง Backend ทันที
+            api(`/api/tasks/${task.id}`,{
+              method:'PUT',
+              body:JSON.stringify({ 
+                title: task.title,
+                description: task.description,
+                status: task.status,
+                priority: task.priority,
+                deadline: task.deadline,
+                assignees: task.assignees,
+                quadrant: newQ 
+              })
+            });
+
+            toast(`Moved to ${qLabels[newQ]}`, 'info');
+         }
+      }
+
+      // เซฟลำดับการเรียงและรีเฟรชหน้าจอใหม่
+      await saveOrder();
+      dragId=null;
+      updateStats();
+      renderMatrix();
+    },200);
+
+    document.removeEventListener('mousemove',onMove);
+    document.removeEventListener('mouseup',onUp);
   }
-  document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onUp);
+  
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('mouseup',onUp);
 }
+
 async function saveOrder(){
   const ids=[];
-  ['q1','q2','q3','q4'].forEach(q=>{document.getElementById(`${q}-list`)?.querySelectorAll('.task-card').forEach(c=>ids.push(c.dataset.id));});
+  ['q1','q2','q3','q4'].forEach(q=>{
+    document.getElementById(`${q}-list`)?.querySelectorAll('.task-card').forEach(c=>ids.push(c.dataset.id));
+  });
   if(ids.length)await api('/api/tasks/reorder',{method:'PATCH',body:JSON.stringify({ids})});
 }
 
@@ -880,7 +961,7 @@ async function saveAvatar(){const name=document.getElementById('avatar-name').va
 async function delAvatar(name){const d=await api(`/api/avatars/${name}`,{method:'DELETE'});if(d.success){delete avatars[name];renderAvatarGrid();renderMatrix();toast('Removed','info');}}
 const zone=document.getElementById('upload-zone');
 zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('dragover');});
-zone.addEventListener('dragleave',()=>zone.classList.remove('dragover'));
+zone.addEventListener('dragleave',()=>zone.classList.remove('dragover'););
 zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('dragover');const f=e.dataTransfer.files[0];if(f){const inp=document.getElementById('file-input');const dt=new DataTransfer();dt.items.add(f);inp.files=dt.files;previewFile(inp);}});
 
 // ── UI ─────────────────────────────────────────
