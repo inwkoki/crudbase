@@ -485,17 +485,75 @@ let calYear=today.getFullYear(), calMonth=today.getMonth(), calWeekOffset=0;
 let pendingDeleteId=null, previewData=null;
 let pieChart=null;
 
+// ── Loading overlay ────────────────────────────
+function showLoading(msg){
+  let el=document.getElementById('loading-overlay');
+  if(!el){
+    el=document.createElement('div');
+    el.id='loading-overlay';
+    el.style.cssText='position:fixed;inset:0;background:rgba(13,13,18,.92);z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:var(--sans)';
+    el.innerHTML='<div style="width:40px;height:40px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite"></div><div id="loading-msg" style="color:var(--text-dim);font-size:14px"></div>';
+    const s=document.createElement('style');s.textContent='@keyframes spin{to{transform:rotate(360deg)}}@keyframes popIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}';document.head.appendChild(s);
+    document.body.appendChild(el);
+  }
+  document.getElementById('loading-msg').textContent=msg||'Connecting to database…';
+  el.style.display='flex';
+}
+function hideLoading(){const el=document.getElementById('loading-overlay');if(el)el.style.display='none';}
+
+// ── DB Paused popup ────────────────────────────
+function showDBPausedPopup(){
+  hideLoading();
+  let el=document.getElementById('db-paused-modal');
+  if(!el){
+    el=document.createElement('div');
+    el.id='db-paused-modal';
+    el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:3000;display:flex;align-items:center;justify-content:center';
+    el.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:32px;width:420px;max-width:90vw;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.5);animation:popIn .2s ease">
+      <div style="font-size:44px;margin-bottom:14px">😴</div>
+      <div style="font-family:var(--serif);font-size:20px;font-weight:500;margin-bottom:8px;color:var(--text)">Database is paused</div>
+      <div style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:24px">
+        Supabase หยุดทำงานอัตโนมัติเมื่อไม่มีการใช้งาน 7 วัน<br>
+        ไปที่ Supabase แล้วกด <strong style="color:var(--text)">Resume</strong> เพื่อเปิดใช้งาน
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <a href="https://supabase.com/dashboard" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:10px;background:var(--accent);color:#fff;font-size:13.5px;font-weight:500;text-decoration:none;box-shadow:0 2px 12px rgba(124,92,252,.35)">
+          🔗 Go to Supabase
+        </a>
+        <button onclick="retryLoad()" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:10px;background:var(--surface2);color:var(--text-dim);border:1px solid var(--border2);font-size:13.5px;font-weight:500;cursor:pointer;font-family:var(--sans)">
+          🔄 Retry
+        </button>
+      </div>
+    </div>`;
+    document.body.appendChild(el);
+  }
+  el.style.display='flex';
+}
+function hideDBPausedPopup(){const el=document.getElementById('db-paused-modal');if(el)el.style.display='none';}
+
 // ── API ────────────────────────────────────────
 async function api(path,opts={}){
   const r=await fetch(path,{headers:{'Content-Type':'application/json'},...opts});
+  if(!r.ok){const err=await r.json().catch(()=>({}));throw Object.assign(new Error(err.message||'API error'),{status:r.status});}
   return r.json();
 }
 
 async function load(){
-  const [td,av]=await Promise.all([api('/api/tasks'),api('/api/avatars')]);
-  allTasks=td.data||[]; avatars=av.data||{};
-  updateStats(); renderMatrix(); renderCal();
+  showLoading('Connecting to database…');
+  try{
+    const [td,av]=await Promise.all([api('/api/tasks'),api('/api/avatars')]);
+    hideLoading(); hideDBPausedPopup();
+    allTasks=td.data||[]; avatars=av.data||{};
+    updateStats(); renderMatrix(); renderCal();
+  }catch(err){
+    console.error('Load error:',err);
+    const s=err.status;
+    if(!s||s>=500||s===503||s===502){showDBPausedPopup();}
+    else{hideLoading();toast('Failed to load: '+err.message,'error');}
+  }
 }
+
+async function retryLoad(){hideDBPausedPopup();await load();}
 
 // ── quadrant logic ─────────────────────────────
 function quadrantOf(t){
@@ -715,12 +773,10 @@ async function createTask(){
 async function cycleStatus(id){
   const t=allTasks.find(x=>x.id===id); if(!t)return;
   const next={todo:'in-progress','in-progress':'done',done:'todo'}[t.status];
-  const d=await api(`/api/tasks/${id}`,{method:'PUT',body:JSON.stringify({status:next})});
-  if(d.success){
-    const i=allTasks.findIndex(x=>x.id===id); allTasks[i]=d.data;
-    updateStats(); renderMatrix(); renderList(); renderCal();
-    toast(`→ ${statusLabel(next)}`);
-  }
+  try{
+    const d=await api(`/api/tasks/${id}`,{method:'PUT',body:JSON.stringify({status:next})});
+    if(d.success){const i=allTasks.findIndex(x=>x.id===id);allTasks[i]=d.data;updateStats();renderMatrix();renderList();renderCal();toast('→ '+statusLabel(next));}
+  }catch(err){toast('Error: '+err.message,'error');}
 }
 
 async function update(id){
