@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taskflow — Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0d12;--surface:#13131c;--surface2:#1a1a26;
+  --border:#252535;--border2:#30304a;
+  --text:#e8e8f2;--text-dim:#7878a0;--text-light:#45455a;
+  --accent:#7c5cfc;--accent-bg:rgba(124,92,252,.08);
+  --done-c:#4ade80;--err-c:#fc5c7d;
+  --sans:'DM Sans',sans-serif;--serif:'Fraunces',Georgia,serif;
+  --shadow-md:0 8px 32px rgba(0,0,0,.5);
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(124,92,252,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(124,92,252,.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none}
+
+.card{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:36px 32px;width:100%;max-width:400px;box-shadow:var(--shadow-md);position:relative;z-index:1}
+
+.logo{text-align:center;margin-bottom:28px}
+.logo-name{font-family:var(--serif);font-size:28px;font-weight:500;letter-spacing:-.3px}
+.logo-name span{color:var(--accent)}
+.logo-sub{font-size:12px;color:var(--text-dim);margin-top:3px;font-weight:300}
+
+.tab-row{display:flex;background:var(--surface2);border-radius:10px;padding:3px;margin-bottom:24px;border:1px solid var(--border)}
+.tab{flex:1;padding:8px;text-align:center;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text-dim);transition:all .15s;border:none;background:transparent;font-family:var(--sans)}
+.tab:hover{color:var(--text)}
+.tab.active{background:var(--accent);color:#fff}
+
+.form-section{display:none}.form-section.active{display:block}
+
+.form-group{margin-bottom:14px}
+label{display:block;font-size:11px;font-weight:500;color:var(--text-dim);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+
+.input-wrap{position:relative}
+input{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:9px;padding:11px 14px;color:var(--text);font-family:var(--sans);font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s}
+input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,92,252,.12)}
+input::placeholder{color:var(--text-light)}
+
+.toggle-pw{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:16px;padding:4px;transition:color .15s}
+.toggle-pw:hover{color:var(--text)}
+
+.pin-row{display:flex;gap:8px;justify-content:center}
+.pin-input{width:48px;height:56px;text-align:center;font-size:22px;font-weight:600;border-radius:10px;background:var(--bg);border:1px solid var(--border2);color:var(--text);outline:none;font-family:var(--sans);transition:border-color .2s,box-shadow .2s;-webkit-text-security:disc;-moz-text-security:disc}
+.pin-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,92,252,.12)}
+.pin-input[type=tel]{-webkit-text-security:disc}
+
+.btn{width:100%;padding:12px;border-radius:10px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .15s;margin-top:6px}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 2px 12px rgba(124,92,252,.35)}
+.btn-primary:hover{background:#9070ff;transform:translateY(-1px)}
+.btn-primary:disabled{opacity:.55;transform:none;cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--text-dim);border:1px solid var(--border2);margin-top:8px}
+.btn-ghost:hover{color:var(--text);background:var(--surface2)}
+
+.msg{padding:10px 14px;border-radius:9px;font-size:13px;margin-bottom:14px;display:none;line-height:1.4}
+.msg.error{background:rgba(252,92,125,.1);border:1px solid rgba(252,92,125,.2);color:var(--err-c)}
+.msg.success{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.2);color:var(--done-c)}
+.msg.show{display:block}
+
+.hint{font-size:12px;color:var(--text-dim);text-align:center;margin-top:14px;line-height:1.6}
+.hint a{color:var(--accent);cursor:pointer;text-decoration:none}
+.hint a:hover{text-decoration:underline}
+
+.step{display:none}.step.active{display:block}
+.step-label{font-size:11px;color:var(--text-dim);text-align:center;margin-bottom:16px;text-transform:uppercase;letter-spacing:.8px;background:var(--surface2);border-radius:8px;padding:6px}
+
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <div class="logo-name">Task<span>flow</span></div>
+    <div class="logo-sub">Shared Workspace · Eisenhower Matrix</div>
+  </div>
+
+  <div class="tab-row">
+    <button class="tab active" onclick="switchTab('login')">Sign In</button>
+    <button class="tab" onclick="switchTab('register')">Register</button>
+    <button class="tab" onclick="switchTab('forgot')">Forgot</button>
+  </div>
+
+  <!-- LOGIN -->
+  <div class="form-section active" id="section-login">
+    <div class="msg" id="login-msg"></div>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="login-user" placeholder="your username" autocomplete="username" autocapitalize="none" spellcheck="false"/>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <div class="input-wrap">
+        <input type="password" id="login-pw" placeholder="••••••••" autocomplete="current-password"/>
+        <button class="toggle-pw" onclick="togglePw('login-pw',this)">👁</button>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="hint">ยังไม่มีบัญชี? <a onclick="switchTab('register')">Register</a> &nbsp;·&nbsp; ลืม password? <a onclick="switchTab('forgot')">Forgot</a></div>
+  </div>
+
+  <!-- REGISTER -->
+  <div class="form-section" id="section-register">
+    <div class="msg" id="reg-msg"></div>
+    <div class="form-group">
+      <label>Display Name</label>
+      <input type="text" id="reg-name" placeholder="ชื่อที่แสดงใน app" autocomplete="name"/>
+    </div>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="reg-user" placeholder="ตัวเล็ก ไม่มีช่องว่าง" autocomplete="username" autocapitalize="none" spellcheck="false"/>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <div class="input-wrap">
+        <input type="password" id="reg-pw" placeholder="อย่างน้อย 4 ตัวอักษร" autocomplete="new-password"/>
+        <button class="toggle-pw" onclick="togglePw('reg-pw',this)">👁</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>PIN สำรอง (4–6 หลัก) ใช้กู้ password</label>
+      <div class="pin-row" id="reg-pins">
+        <input class="pin-input" type="tel" maxlength="1" id="rp0" oninput="pNext('rp',0,6)" onkeydown="pBack(event,'rp',0)"/>
+        <input class="pin-input" type="tel" maxlength="1" id="rp1" oninput="pNext('rp',1,6)" onkeydown="pBack(event,'rp',1)"/>
+        <input class="pin-input" type="tel" maxlength="1" id="rp2" oninput="pNext('rp',2,6)" onkeydown="pBack(event,'rp',2)"/>
+        <input class="pin-input" type="tel" maxlength="1" id="rp3" oninput="pNext('rp',3,6)" onkeydown="pBack(event,'rp',3)"/>
+        <input class="pin-input" type="tel" maxlength="1" id="rp4" oninput="pNext('rp',4,6)" onkeydown="pBack(event,'rp',4)"/>
+        <input class="pin-input" type="tel" maxlength="1" id="rp5" oninput="pNext('rp',5,6)" onkeydown="pBack(event,'rp',5)"/>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="reg-btn" onclick="doRegister()">Create Account</button>
+    <div class="hint">มีบัญชีแล้ว? <a onclick="switchTab('login')">Sign In</a></div>
+  </div>
+
+  <!-- FORGOT -->
+  <div class="form-section" id="section-forgot">
+    <div class="msg" id="forgot-msg"></div>
+
+    <div class="step active" id="fstep1">
+      <div class="step-label">Step 1 / 3 — ระบุ Username</div>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="f-user" placeholder="your username" autocomplete="username" autocapitalize="none"/>
+      </div>
+      <button class="btn btn-primary" onclick="fStep1()">ต่อไป →</button>
+    </div>
+
+    <div class="step" id="fstep2">
+      <div class="step-label">Step 2 / 3 — ยืนยัน PIN</div>
+      <div class="form-group">
+        <label>PIN 4–6 หลักที่ตั้งไว้ตอน Register</label>
+        <div class="pin-row">
+          <input class="pin-input" type="tel" maxlength="1" id="fp0" oninput="pNext('fp',0,6)" onkeydown="pBack(event,'fp',0)"/>
+          <input class="pin-input" type="tel" maxlength="1" id="fp1" oninput="pNext('fp',1,6)" onkeydown="pBack(event,'fp',1)"/>
+          <input class="pin-input" type="tel" maxlength="1" id="fp2" oninput="pNext('fp',2,6)" onkeydown="pBack(event,'fp',2)"/>
+          <input class="pin-input" type="tel" maxlength="1" id="fp3" oninput="pNext('fp',3,6)" onkeydown="pBack(event,'fp',3)"/>
+          <input class="pin-input" type="tel" maxlength="1" id="fp4" oninput="pNext('fp',4,6)" onkeydown="pBack(event,'fp',4)"/>
+          <input class="pin-input" type="tel" maxlength="1" id="fp5" oninput="pNext('fp',5,6)" onkeydown="pBack(event,'fp',5)"/>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="fStep2()">ยืนยัน PIN</button>
+      <button class="btn btn-ghost" onclick="goStep(1)">← กลับ</button>
+    </div>
+
+    <div class="step" id="fstep3">
+      <div class="step-label">Step 3 / 3 — ตั้ง Password ใหม่</div>
+      <div class="form-group">
+        <label>Password ใหม่</label>
+        <div class="input-wrap">
+          <input type="password" id="f-newpw" placeholder="อย่างน้อย 4 ตัวอักษร" autocomplete="new-password"/>
+          <button class="toggle-pw" onclick="togglePw('f-newpw',this)">👁</button>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="fStep3()">บันทึก Password ใหม่ ✓</button>
+    </div>
+
+    <div class="hint"><a onclick="switchTab('login')">← กลับไป Sign In</a></div>
+  </div>
+</div>
+
+<script>
+let resetToken=null;
+
+function switchTab(t){
+  ['login','register','forgot'].forEach((n,i)=>{
+    document.querySelectorAll('.tab')[i].classList.toggle('active',n===t);
+    document.getElementById(`section-${n}`).classList.toggle('active',n===t);
+  });
+  clearMsgs();
+}
+
+function clearMsgs(){document.querySelectorAll('.msg').forEach(m=>{m.className='msg';m.textContent='';})}
+function showMsg(id,text,type='error'){const el=document.getElementById(id);el.textContent=text;el.className=`msg ${type} show`;}
+
+function togglePw(id,btn){const i=document.getElementById(id);const t=i.type==='text';i.type=t?'password':'text';btn.textContent=t?'👁':'🙈';}
+
+// PIN helpers
+function pNext(pfx,i,max){const v=document.getElementById(`${pfx}${i}`).value;if(v&&i<max-1)document.getElementById(`${pfx}${i+1}`)?.focus();}
+function pBack(e,pfx,i){if(e.key==='Backspace'&&!document.getElementById(`${pfx}${i}`).value&&i>0)document.getElementById(`${pfx}${i-1}`).focus();}
+function getP(pfx){return[0,1,2,3,4,5].map(i=>document.getElementById(`${pfx}${i}`)?.value||'').join('');}
+
+function goStep(n){
+  document.querySelectorAll('.step').forEach((s,i)=>s.classList.toggle('active',i===n-1));
+}
+
+function loading(btnId,on,label){
+  const b=document.getElementById(btnId);if(!b)return;
+  b.disabled=on;
+  b.innerHTML=on?'<span class="spinner"></span>Loading…':label;
+}
+
+async function post(url,body){
+  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  return r.json();
+}
+
+async function doLogin(){
+  const u=document.getElementById('login-user').value.trim();
+  const p=document.getElementById('login-pw').value;
+  if(!u||!p){showMsg('login-msg','กรุณากรอก username และ password');return;}
+  loading('login-btn',true,'Sign In');
+  try{
+    const d=await post('/api/auth/login',{username:u,password:p});
+    if(d.success){window.location.href='/';}
+    else showMsg('login-msg',d.message||'Login failed');
+  }catch{showMsg('login-msg','Connection error — please try again');}
+  loading('login-btn',false,'Sign In');
+}
+
+async function doRegister(){
+  const name=document.getElementById('reg-name').value.trim();
+  const u=document.getElementById('reg-user').value.trim().toLowerCase().replace(/\s/g,'');
+  const p=document.getElementById('reg-pw').value;
+  const pin=getP('rp');
+  if(!name){showMsg('reg-msg','กรุณากรอก Display Name');return;}
+  if(!u){showMsg('reg-msg','กรุณากรอก Username');return;}
+  if(p.length<4){showMsg('reg-msg','Password ต้องมีอย่างน้อย 4 ตัวอักษร');return;}
+  if(pin.length<4){showMsg('reg-msg','กรุณากรอก PIN อย่างน้อย 4 หลัก');return;}
+  loading('reg-btn',true,'Create Account');
+  try{
+    const d=await post('/api/auth/register',{username:u,password:p,pin,display_name:name});
+    if(d.success){window.location.href='/';}
+    else showMsg('reg-msg',d.message||'Register failed');
+  }catch{showMsg('reg-msg','Connection error — please try again');}
+  loading('reg-btn',false,'Create Account');
+}
+
+function fStep1(){
+  const u=document.getElementById('f-user').value.trim();
+  if(!u){showMsg('forgot-msg','กรุณากรอก username');return;}
+  clearMsgs();
+  goStep(2);
+  document.getElementById('fp0').focus();
+}
+
+async function fStep2(){
+  const u=document.getElementById('f-user').value.trim();
+  const pin=getP('fp');
+  if(pin.length<4){showMsg('forgot-msg','กรุณากรอก PIN อย่างน้อย 4 หลัก');return;}
+  try{
+    const d=await post('/api/auth/verify-pin',{username:u,pin});
+    if(d.success){resetToken=d.reset_token;clearMsgs();goStep(3);document.getElementById('f-newpw').focus();}
+    else showMsg('forgot-msg',d.message||'PIN ไม่ถูกต้อง');
+  }catch{showMsg('forgot-msg','Connection error');}
+}
+
+async function fStep3(){
+  const pw=document.getElementById('f-newpw').value;
+  if(pw.length<4){showMsg('forgot-msg','Password ต้องมีอย่างน้อย 4 ตัวอักษร');return;}
+  try{
+    const d=await post('/api/auth/reset-password',{reset_token:resetToken,new_password:pw});
+    if(d.success){showMsg('forgot-msg','เปลี่ยน password สำเร็จ! กำลัง redirect…','success');setTimeout(()=>switchTab('login'),1500);}
+    else showMsg('forgot-msg',d.message||'Reset failed');
+  }catch{showMsg('forgot-msg','Connection error');}
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter')return;
+  const active=document.querySelector('.form-section.active');
+  if(active?.id==='section-login')doLogin();
+  else if(active?.id==='section-register')doRegister();
+});
+</script>
+</body>
+</html>

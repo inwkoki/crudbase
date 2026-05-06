@@ -286,6 +286,16 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
     <div class="brand">
       <div class="brand-name">Task<span>flow</span></div>
       <div class="brand-sub">Eisenhower Matrix</div>
+      <div id="user-badge" style="margin-top:10px;display:flex;align-items:center;gap:8px">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--accent-bg);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--accent)" id="user-avatar-initial">?</div>
+        <div style="min-width:0">
+          <div style="font-size:12.5px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="user-display-name">Loading…</div>
+          <div style="font-size:10.5px;color:var(--text-dim)" id="user-username"></div>
+        </div>
+      </div>
+      <button onclick="doLogout()" style="margin-top:8px;width:100%;padding:6px 10px;border-radius:8px;background:transparent;border:1px solid var(--border2);color:var(--text-dim);font-size:12px;cursor:pointer;font-family:var(--sans);transition:all .15s;text-align:left" onmouseover="this.style.color='var(--err-c)';this.style.borderColor='var(--err-c)'" onmouseout="this.style.color='var(--text-dim)';this.style.borderColor='var(--border2)'">
+        ↩ Sign Out
+      </button>
     </div>
     <span class="nav-label">Views</span>
     <div class="nav-item active" onclick="showPage('tasks',this)"><span class="nav-icon">▦</span>Matrix<span class="nav-count" id="nav-all">0</span></div>
@@ -352,7 +362,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
             </select>
           </div>
           <div class="form-group"><label>Deadline</label><input type="date" id="new-dl"/></div>
-          <div class="form-group"><label>Assignees</label><input type="text" id="new-asgn" placeholder="Alice, Bob"/></div>
+          <div class="form-group"><label>Assignees</label><div id="new-asgn-wrap"><select id="new-asgn-select" multiple style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:9px;padding:8px 12px;color:var(--text);font-family:var(--sans);font-size:13px;outline:none;min-height:72px" onchange="syncAsgnField()"></select><input type="hidden" id="new-asgn"/></div></div>
         </div>
         <div class="form-actions">
           <button class="btn btn-ghost" onclick="toggleForm()">Cancel</button>
@@ -478,7 +488,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
 <div class="toast-container" id="toasts"></div>
 
 <script>
-let allTasks=[], avatars={};
+let allTasks=[], avatars={}, allUsers=[], currentUser=null;
 let listFilter='all', calView='month', completedOpen=false;
 const today=new Date();
 let calYear=today.getFullYear(), calMonth=today.getMonth(), calWeekOffset=0;
@@ -489,10 +499,9 @@ let pieChart=null;
 function showLoading(msg){
   let el=document.getElementById('loading-overlay');
   if(!el){
-    el=document.createElement('div');
-    el.id='loading-overlay';
-    el.style.cssText='position:fixed;inset:0;background:rgba(13,13,18,.92);z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:var(--sans)';
-    el.innerHTML='<div style="width:40px;height:40px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite"></div><div id="loading-msg" style="color:var(--text-dim);font-size:14px;text-align:center"></div><div style="color:var(--text-light);font-size:11.5px;text-align:center;max-width:280px;line-height:1.5">Render free tier อาจใช้เวลา ~30 วินาที ในการเริ่มต้น</div>';
+    el=document.createElement('div');el.id='loading-overlay';
+    el.style.cssText='position:fixed;inset:0;background:rgba(13,13,18,.92);z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-family:var(--sans)';
+    el.innerHTML='<div style="width:38px;height:38px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite"></div><div id="loading-msg" style="color:var(--text-dim);font-size:13.5px;text-align:center"></div><div style="color:var(--text-light);font-size:11.5px;text-align:center;max-width:280px;line-height:1.5">Render free tier อาจใช้เวลา ~30 วินาที ในการเริ่มต้น</div>';
     const s=document.createElement('style');s.textContent='@keyframes spin{to{transform:rotate(360deg)}}@keyframes popIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}';document.head.appendChild(s);
     document.body.appendChild(el);
   }
@@ -501,30 +510,13 @@ function showLoading(msg){
 }
 function hideLoading(){const el=document.getElementById('loading-overlay');if(el)el.style.display='none';}
 
-// ── DB Paused popup ────────────────────────────
 function showDBPausedPopup(){
   hideLoading();
   let el=document.getElementById('db-paused-modal');
   if(!el){
-    el=document.createElement('div');
-    el.id='db-paused-modal';
+    el=document.createElement('div');el.id='db-paused-modal';
     el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:3000;display:flex;align-items:center;justify-content:center';
-    el.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:32px;width:420px;max-width:90vw;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.5);animation:popIn .2s ease">
-      <div style="font-size:44px;margin-bottom:14px">😴</div>
-      <div style="font-family:var(--serif);font-size:20px;font-weight:500;margin-bottom:8px;color:var(--text)">Database is paused</div>
-      <div style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:24px">
-        Supabase หยุดทำงานอัตโนมัติเมื่อไม่มีการใช้งาน 7 วัน<br>
-        ไปที่ Supabase แล้วกด <strong style="color:var(--text)">Resume</strong> เพื่อเปิดใช้งาน
-      </div>
-      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-        <a href="https://supabase.com/dashboard" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:10px;background:var(--accent);color:#fff;font-size:13.5px;font-weight:500;text-decoration:none;box-shadow:0 2px 12px rgba(124,92,252,.35)">
-          🔗 Go to Supabase
-        </a>
-        <button onclick="retryLoad()" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:10px;background:var(--surface2);color:var(--text-dim);border:1px solid var(--border2);font-size:13.5px;font-weight:500;cursor:pointer;font-family:var(--sans)">
-          🔄 Retry
-        </button>
-      </div>
-    </div>`;
+    el.innerHTML='<div style="background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:32px;width:420px;max-width:90vw;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.5);animation:popIn .2s ease"><div style="font-size:44px;margin-bottom:14px">😴</div><div style="font-family:var(--serif);font-size:20px;font-weight:500;margin-bottom:8px;color:var(--text)">Database is paused</div><div style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:24px">Supabase หยุดทำงานอัตโนมัติเมื่อไม่มีการใช้งาน 7 วัน<br>ไปที่ Supabase แล้วกด <strong style="color:var(--text)">Resume</strong> เพื่อเปิดใช้งาน</div><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><a href="https://supabase.com/dashboard" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:10px;background:var(--accent);color:#fff;font-size:13.5px;font-weight:500;text-decoration:none;box-shadow:0 2px 12px rgba(124,92,252,.35)">🔗 Go to Supabase</a><button onclick="retryLoad()" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:10px;background:var(--surface2);color:var(--text-dim);border:1px solid var(--border2);font-size:13.5px;font-weight:500;cursor:pointer;font-family:var(--sans)">🔄 Retry</button></div></div>';
     document.body.appendChild(el);
   }
   el.style.display='flex';
@@ -549,38 +541,66 @@ async function api(path,opts={},timeoutMs=12000){
 
 async function load(){
   showLoading('Connecting to database…');
-  // Render free tier wakes up slowly — retry with countdown
   let attempt=0;
   const maxAttempts=3;
   while(attempt<maxAttempts){
     attempt++;
-    if(attempt>1) showLoading(`Still waking up… (${attempt}/${maxAttempts})`);
+    if(attempt>1)showLoading(`Waking up server… (${attempt}/${maxAttempts})`);
     try{
-      const [td,av]=await Promise.all([api('/api/tasks'),api('/api/avatars')]);
-      allTasks=td.data||[]; avatars=av.data||{};
+      const [td,av,ud,me]=await Promise.all([api('/api/tasks'),api('/api/avatars'),api('/api/users'),api('/api/auth/me')]);
+      allTasks=td.data||[]; avatars=av.data||{}; allUsers=ud.data||[]; currentUser=me.user||null;
       hideLoading(); hideDBPausedPopup();
-      try{ updateStats(); }catch(e){ console.error('updateStats error:',e); }
-      try{ renderMatrix(); }catch(e){ console.error('renderMatrix error:',e); }
-      try{ renderCal(); }catch(e){ console.error('renderCal error:',e); }
+      updateUserBadge(); populateAsgnDropdown();
+      try{updateStats();}catch(e){console.error('updateStats:',e);}
+      try{renderMatrix();}catch(e){console.error('renderMatrix:',e);}
+      try{renderCal();}catch(e){console.error('renderCal:',e);}
       return;
     }catch(err){
       console.error(`Load attempt ${attempt} failed:`,err);
       const s=err.status;
-      // timeout or server error → might be Render waking up, retry once more
-      if(attempt<maxAttempts && (err.timeout||!s||s>=500)){
-        showLoading(`Waking up server… (${attempt}/${maxAttempts})`);
-        await new Promise(r=>setTimeout(r,3000));
-        continue;
+      if(s===401){window.location.href='/login.html';return;}
+      if(attempt<maxAttempts&&(err.timeout||!s||s>=500)){
+        await new Promise(r=>setTimeout(r,3000));continue;
       }
-      // After all retries or definitive error → show popup
       if(!s||s>=500||err.timeout){showDBPausedPopup();}
-      else{hideLoading();toast('Failed to load: '+err.message,'error');}
+      else{hideLoading();toast('Failed: '+err.message,'error');}
       return;
     }
   }
 }
 
 async function retryLoad(){hideDBPausedPopup();await load();}
+
+function updateUserBadge(){
+  if(!currentUser)return;
+  const ini=(currentUser.display_name||'?')[0].toUpperCase();
+  document.getElementById('user-avatar-initial').textContent=ini;
+  document.getElementById('user-display-name').textContent=currentUser.display_name;
+  document.getElementById('user-username').textContent='@'+currentUser.username;
+}
+
+function populateAsgnDropdown(){
+  const sel=document.getElementById('new-asgn-select');
+  if(!sel)return;
+  sel.innerHTML=allUsers.map(u=>`<option value="${u.display_name}">${esc(u.display_name)} (@${u.username})</option>`).join('');
+}
+
+function syncAsgnField(){
+  const sel=document.getElementById('new-asgn-select');
+  if(!sel)return;
+  document.getElementById('new-asgn').value=[...sel.selectedOptions].map(o=>o.value).join(', ');
+}
+
+function syncEditAsgn(id){
+  const sel=document.getElementById(`ea-select-${id}`);
+  if(!sel)return;
+  document.getElementById(`ea-${id}`).value=[...sel.selectedOptions].map(o=>o.value).join(', ');
+}
+
+async function doLogout(){
+  await fetch('/api/auth/logout',{method:'POST'});
+  window.location.href='/login.html';
+}
 
 // ── quadrant logic ─────────────────────────────
 function quadrantOf(t){
@@ -637,37 +657,29 @@ function updateStats(){
 }
 
 function updatePie(w1, w2, w3, w4){
-  try{
-    const canvas=document.getElementById('pie-chart');
-    if(!canvas) return;
-    if(typeof Chart==='undefined') return;
-    const ctx=canvas.getContext('2d');
-    const data=[w1, w2, w3, w4];
-    // if all zero show empty placeholder
-    const total=data.reduce((a,b)=>a+b,0);
-    if(total===0){ data[3]=1; }
-    const colors=['#fc5c7d', '#f5a623', '#5ba3f5', '#7878a0'];
-    if(pieChart){
-      pieChart.data.datasets[0].data=data;
-      pieChart.update('none');
-      return;
+  const ctx=document.getElementById('pie-chart').getContext('2d');
+  const data=[w1, w2, w3, w4];
+  const colors=['#fc5c7d', '#f5a623', '#5ba3f5', '#7878a0'];
+  if(pieChart){
+    pieChart.data.datasets[0].data=data;
+    pieChart.update('none');
+    return;
+  }
+  pieChart=new Chart(ctx,{
+    type:'doughnut',
+    data:{datasets:[{data,backgroundColor:colors,borderWidth:0,hoverOffset:4}]},
+    options:{
+      cutout:'72%',
+      animation:{duration:600,easing:'easeInOutQuart'},
+      plugins:{legend:{display:false},tooltip:{
+        callbacks:{label:ctx=>{
+          const labels=['Do First','Schedule','Delegate','Eliminate'];
+          return ` ${labels[ctx.dataIndex]}: ${ctx.raw} pts`;
+        }}
+      }},
+      responsive:true,maintainAspectRatio:true,
     }
-    pieChart=new Chart(ctx,{
-      type:'doughnut',
-      data:{datasets:[{data,backgroundColor:colors,borderWidth:0,hoverOffset:4}]},
-      options:{
-        cutout:'72%',
-        animation:{duration:600,easing:'easeInOutQuart'},
-        plugins:{legend:{display:false},tooltip:{
-          callbacks:{label:ctx=>{
-            const labels=['Do First','Schedule','Delegate','Eliminate'];
-            return ` ${labels[ctx.dataIndex]}: ${ctx.raw} pts`;
-          }}
-        }},
-        responsive:true,maintainAspectRatio:true,
-      }
-    });
-  }catch(e){ console.error('Pie chart error:',e); }
+  });
 }
 
 // ── Render Matrix ──────────────────────────────
@@ -767,7 +779,7 @@ function taskHTML(t){
           <option value="done" ${t.status==='done'?'selected':''}>Done</option>
         </select></div>
         <div class="form-group"><label>Deadline</label><input type="date" id="edl-${t.id}" value="${t.deadline?t.deadline.slice(0, 10):''}"/></div>
-        <div class="form-group form-full"><label>Assignees</label><input type="text" id="ea-${t.id}" value="${esc(t.assignees||'')}"/></div>
+        <div class="form-group form-full"><label>Assignees</label><select id="ea-select-${t.id}" multiple style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:9px;padding:8px 12px;color:var(--text);font-family:var(--sans);font-size:13px;outline:none;min-height:64px" onchange="syncEditAsgn('${t.id}')">${allUsers.map(u=>`<option value="${u.display_name}" ${(t.assignees||'').split(',').map(s=>s.trim()).includes(u.display_name)?'selected':''}>${esc(u.display_name)} (@${u.username})</option>`).join('')}</select><input type="hidden" id="ea-${t.id}" value="${esc(t.assignees||'')}"/></div>
       </div>
       <div class="form-actions">
         <button class="btn btn-ghost btn-sm" onclick="toggleEdit('${t.id}')">Cancel</button>
@@ -808,10 +820,12 @@ async function createTask(){
 async function cycleStatus(id){
   const t=allTasks.find(x=>x.id===id); if(!t)return;
   const next={todo:'in-progress','in-progress':'done',done:'todo'}[t.status];
-  try{
-    const d=await api(`/api/tasks/${id}`,{method:'PUT',body:JSON.stringify({status:next})});
-    if(d.success){const i=allTasks.findIndex(x=>x.id===id);allTasks[i]=d.data;updateStats();renderMatrix();renderList();renderCal();toast('→ '+statusLabel(next));}
-  }catch(err){toast('Error: '+err.message,'error');}
+  const d=await api(`/api/tasks/${id}`,{method:'PUT',body:JSON.stringify({status:next})});
+  if(d.success){
+    const i=allTasks.findIndex(x=>x.id===id); allTasks[i]=d.data;
+    updateStats(); renderMatrix(); renderList(); renderCal();
+    toast(`→ ${statusLabel(next)}`);
+  }
 }
 
 async function update(id){
