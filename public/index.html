@@ -301,6 +301,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
     <div class="nav-item active" onclick="showPage('tasks',this)"><span class="nav-icon">▦</span>Matrix<span class="nav-count" id="nav-all">0</span></div>
     <div class="nav-item" onclick="showPage('list',this)"><span class="nav-icon">≡</span>List</div>
     <div class="nav-item" onclick="showPage('calendar',this)"><span class="nav-icon">◻</span>Calendar</div>
+    <div class="nav-item" onclick="showPage('dashboard',this)"><span class="nav-icon">⊞</span>Dashboard</div>
     <span class="nav-label" style="margin-top:14px">Quadrant</span>
     <div class="nav-item" onclick="scrollToQ('q1',this)"><span class="nav-icon" style="color:var(--q1)">●</span>Do First<span class="nav-count" id="nav-q1">0</span></div>
     <div class="nav-item" onclick="scrollToQ('q2',this)"><span class="nav-icon" style="color:var(--q2)">●</span>Schedule<span class="nav-count" id="nav-q2">0</span></div>
@@ -448,7 +449,99 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
       </div>
     </div>
 
+    <!-- Dashboard page -->
+    <div class="page" id="page-dashboard">
+      <div class="page-header">
+        <div><div class="page-title">Dashboard</div><div class="page-subtitle" id="dash-greeting">Good morning!</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div id="fit-status-btn"></div>
+        </div>
+      </div>
+
+      <!-- Weather + Task summary row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:20px" id="dash-top-row">
+        <div class="stat-card" id="weather-card" style="grid-column:1/2">
+          <div style="font-size:32px;margin-bottom:4px" id="weather-emoji">⏳</div>
+          <div style="font-size:22px;font-weight:600;font-family:var(--serif)" id="weather-temp">—°C</div>
+          <div style="font-size:11.5px;color:var(--text-dim)" id="weather-label">Loading weather…</div>
+          <div style="font-size:11px;color:var(--text-light);margin-top:4px" id="weather-details"></div>
+        </div>
+        <div class="stat-card"><div class="stat-num" style="color:var(--q1)" id="dash-overdue">—</div><div class="stat-lbl">Overdue</div></div>
+        <div class="stat-card"><div class="stat-num" style="color:var(--q2)" id="dash-today">—</div><div class="stat-lbl">Due Today</div></div>
+        <div class="stat-card"><div class="stat-num" style="color:var(--done-c)" id="dash-done-week">—</div><div class="stat-lbl">Done This Week</div></div>
+      </div>
+
+      <!-- Health & Fitness -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:var(--shadow)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+          <div style="font-family:var(--serif);font-size:18px;font-weight:500">💪 Health & Fitness</div>
+          <div id="fit-connect-area"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px" id="fit-data-row">
+          <div class="stat-card"><div class="stat-num" style="color:var(--todo-c)" id="fit-steps">—</div><div class="stat-lbl">👟 Steps today</div></div>
+          <div class="stat-card"><div class="stat-num" style="color:var(--q2)" id="fit-calories">—</div><div class="stat-lbl">🔥 Calories</div></div>
+          <div class="stat-card"><div class="stat-num" style="color:var(--accent)" id="fit-sleep">—</div><div class="stat-lbl">😴 Sleep (hrs)</div></div>
+        </div>
+        <!-- Steps progress bar -->
+        <div style="margin-top:14px">
+          <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-dim);margin-bottom:6px">
+            <span>Steps progress</span><span id="steps-pct-lbl">0 / 10,000</span>
+          </div>
+          <div style="height:6px;background:var(--surface3);border-radius:999px;overflow:hidden">
+            <div id="steps-bar" style="height:100%;background:linear-gradient(90deg,var(--accent),var(--todo-c));border-radius:999px;width:0%;transition:width .6s ease"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Habits -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:var(--shadow)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+          <div style="font-family:var(--serif);font-size:18px;font-weight:500">🎯 Habit Tracker</div>
+          <button class="btn btn-ghost btn-sm" onclick="openAddHabit()" style="font-size:12px">＋ Add Habit</button>
+        </div>
+        <div id="habits-list" style="display:flex;flex-direction:column;gap:8px">
+          <div style="text-align:center;padding:24px;color:var(--text-dim);font-size:13px">Loading habits…</div>
+        </div>
+      </div>
+
+      <!-- Achievements -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)">
+        <div style="font-family:var(--serif);font-size:18px;font-weight:500;margin-bottom:16px">🏆 Achievements</div>
+        <div id="achievements-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">
+          <div style="text-align:center;padding:24px;color:var(--text-dim);font-size:13px;grid-column:1/-1">Loading…</div>
+        </div>
+      </div>
+    </div>
+
   </main>
+</div>
+
+<!-- Add Habit Modal -->
+<div class="confirm-bg" id="add-habit-modal" style="display:none">
+  <div class="confirm-box" style="max-width:340px">
+    <div style="font-family:var(--serif);font-size:18px;font-weight:500;margin-bottom:16px;text-align:left">New Habit</div>
+    <div class="form-group" style="margin-bottom:12px;text-align:left">
+      <label>Icon + Name</label>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="habit-icon" value="✅" style="width:52px;text-align:center;font-size:18px"/>
+        <input type="text" id="habit-name" placeholder="ไม่เข้า 7, ออกกำลังกาย…" style="flex:1"/>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:16px;text-align:left">
+      <label>Color</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="setHabitColor('#7c5cfc',this)" style="width:28px;height:28px;border-radius:50%;background:#7c5cfc;border:2px solid white;cursor:pointer"></button>
+        <button onclick="setHabitColor('#fc5c7d',this)" style="width:28px;height:28px;border-radius:50%;background:#fc5c7d;border:2px solid transparent;cursor:pointer"></button>
+        <button onclick="setHabitColor('#f5a623',this)" style="width:28px;height:28px;border-radius:50%;background:#f5a623;border:2px solid transparent;cursor:pointer"></button>
+        <button onclick="setHabitColor('#4ade80',this)" style="width:28px;height:28px;border-radius:50%;background:#4ade80;border:2px solid transparent;cursor:pointer"></button>
+        <button onclick="setHabitColor('#5ba3f5',this)" style="width:28px;height:28px;border-radius:50%;background:#5ba3f5;border:2px solid transparent;cursor:pointer"></button>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-ghost btn-sm" onclick="closeAddHabit()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveHabit()">Add Habit</button>
+    </div>
+  </div>
 </div>
 
 <!-- Confirm delete -->
@@ -494,6 +587,194 @@ const today=new Date();
 let calYear=today.getFullYear(), calMonth=today.getMonth(), calWeekOffset=0;
 let pendingDeleteId=null, previewData=null;
 let pieChart=null;
+
+// ── Dashboard ──────────────────────────────────
+let habits=[], achievements=[], fitConnected=false, habitColor='#7c5cfc';
+
+async function loadDashboard(){
+  // Greeting
+  const h=new Date().getHours();
+  // greeting set below
+  document.getElementById('dash-greeting').textContent=
+    `${h<12?'Good morning':h<18?'Good afternoon':'Good evening'}, ${currentUser?.display_name||''}! Here's your day at a glance.`;
+
+  // Task summary
+  const now=new Date(); now.setHours(0,0,0,0);
+  const weekStart=new Date(now); weekStart.setDate(now.getDate()-now.getDay());
+  const overdue=allTasks.filter(t=>t.deadline&&new Date(t.deadline+'T00:00:00')<now&&t.status!=='done').length;
+  const dueToday=allTasks.filter(t=>t.deadline&&t.deadline.slice(0,10)===now.toISOString().slice(0,10)&&t.status!=='done').length;
+  const doneWeek=allTasks.filter(t=>t.status==='done'&&t.created_at&&new Date(t.created_at)>=weekStart).length;
+  document.getElementById('dash-overdue').textContent=overdue;
+  document.getElementById('dash-today').textContent=dueToday;
+  document.getElementById('dash-done-week').textContent=doneWeek;
+
+  // Weather
+  loadWeather();
+
+  // Fitness
+  loadFitness();
+
+  // Habits
+  await loadHabits();
+
+  // Achievements
+  await loadAchievements();
+}
+
+async function loadWeather(){
+  if(!navigator.geolocation){
+    document.getElementById('weather-label').textContent='Location not available';
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    try{
+      const {latitude:lat, longitude:lon}=pos.coords;
+      const d=await api(`/api/weather?lat=${lat}&lon=${lon}`);
+      if(d.success){
+        document.getElementById('weather-emoji').textContent=d.data.emoji;
+        document.getElementById('weather-temp').textContent=d.data.temp+'°C';
+        document.getElementById('weather-label').textContent=d.data.label;
+        document.getElementById('weather-details').textContent=`💧 ${d.data.humidity}% · 💨 ${d.data.windspeed} km/h`;
+      }
+    }catch(e){console.error('weather:',e);}
+  }, ()=>{ document.getElementById('weather-label').textContent='Allow location for weather'; });
+}
+
+async function loadFitness(){
+  const area=document.getElementById('fit-connect-area');
+  const statusBtn=document.getElementById('fit-status-btn');
+  try{
+    const d=await api('/api/googlefit/today');
+    if(d.success){
+      fitConnected=true;
+      document.getElementById('fit-steps').textContent=d.data.steps.toLocaleString();
+      document.getElementById('fit-calories').textContent=d.data.calories.toLocaleString();
+      document.getElementById('fit-sleep').textContent=d.data.sleep_hours||'—';
+      const pct=Math.min(100,Math.round(d.data.steps/10000*100));
+      document.getElementById('steps-bar').style.width=pct+'%';
+      document.getElementById('steps-pct-lbl').textContent=`${d.data.steps.toLocaleString()} / 10,000`;
+      if(d.data.steps>=10000) api('/api/achievements/check',{method:'POST',body:JSON.stringify({key:'steps_10k'})}).catch(()=>{});
+      area.innerHTML=`<button class="btn btn-ghost btn-sm" style="color:var(--done-c);border-color:rgba(74,222,128,.3)" onclick="disconnectFit()">✓ Google Fit connected · Disconnect</button>`;
+      statusBtn.innerHTML='';
+    } else if(d.message==='not_connected'){
+      fitConnected=false;
+      ['fit-steps','fit-calories','fit-sleep'].forEach(id=>{document.getElementById(id).textContent='—';});
+      area.innerHTML=`<a href="/api/googlefit/connect" class="btn btn-primary btn-sm">🔗 Connect Google Fit</a>`;
+    }
+  }catch(e){
+    area.innerHTML=`<a href="/api/googlefit/connect" class="btn btn-primary btn-sm">🔗 Connect Google Fit</a>`;
+  }
+  // Check if just connected
+  if(window.location.search.includes('fit=connected')){
+    toast('Google Fit connected! 💪','success');
+    history.replaceState({},'','/');
+    api('/api/achievements/check',{method:'POST',body:JSON.stringify({key:'fit_connected'})}).catch(()=>{});
+  }
+}
+
+async function disconnectFit(){
+  await api('/api/googlefit/disconnect',{method:'DELETE'});
+  toast('Google Fit disconnected','info');
+  loadFitness();
+}
+
+async function loadHabits(){
+  try{
+    const d=await api('/api/habits');
+    habits=d.data||[];
+    renderHabits();
+  }catch(e){console.error('habits:',e);}
+}
+
+function renderHabits(){
+  const el=document.getElementById('habits-list');
+  if(!habits.length){
+    el.innerHTML=`<div style="text-align:center;padding:28px;color:var(--text-dim);font-size:13px;font-weight:300">
+      No habits yet. Add one to start tracking your streaks! 🎯
+    </div>`;
+    return;
+  }
+  el.innerHTML=habits.map(h=>{
+    const flameLen=Math.min(h.streak,10);
+    const flames='🔥'.repeat(Math.min(flameLen,5));
+    return `<div style="display:flex;align-items:center;gap:12px;background:var(--surface2);border-radius:10px;padding:12px 14px;border:1px solid var(--border);transition:all .15s" id="habit-${h.id}">
+      <button onclick="toggleHabit('${h.id}')" style="width:36px;height:36px;border-radius:50%;border:2px solid ${h.color};background:${h.done_today?h.color:'transparent'};font-size:16px;cursor:pointer;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center">
+        ${h.done_today?'✓':''}
+      </button>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:500;display:flex;align-items:center;gap:6px">
+          <span>${h.icon}</span> ${esc(h.name)}
+          ${h.done_today?`<span style="font-size:11px;background:rgba(74,222,128,.12);color:var(--done-c);padding:2px 8px;border-radius:999px;border:1px solid rgba(74,222,128,.2)">Done ✓</span>`:''}
+        </div>
+        <div style="font-size:11.5px;color:var(--text-dim);margin-top:2px;display:flex;align-items:center;gap:6px">
+          <span style="color:${h.color};font-weight:600">${h.streak} day streak</span>
+          ${h.streak>0?flames:''}
+        </div>
+      </div>
+      <button onclick="deleteHabit('${h.id}')" class="btn btn-danger btn-sm" style="opacity:.5;padding:4px 8px;font-size:11px">✕</button>
+    </div>`;
+  }).join('');
+}
+
+async function toggleHabit(id){
+  try{
+    const d=await api(`/api/habits/${id}/toggle`,{method:'POST'});
+    if(d.success){
+      const h=habits.find(x=>x.id===id);
+      if(h){h.done_today=d.done;h.streak=d.streak;}
+      renderHabits();
+      if(d.done) toast(`${habits.find(x=>x.id===id)?.name} — done! 🎯`,'success');
+      // Reload achievements
+      await loadAchievements();
+    }
+  }catch(e){toast('Error toggling habit','error');}
+}
+
+async function deleteHabit(id){
+  await api(`/api/habits/${id}`,{method:'DELETE'});
+  habits=habits.filter(h=>h.id!==id);
+  renderHabits();
+  toast('Habit removed','info');
+}
+
+let addHabitOpen=false;
+function openAddHabit(){document.getElementById('add-habit-modal').style.display='flex';addHabitOpen=true;setTimeout(()=>document.getElementById('habit-name').focus(),50);}
+function closeAddHabit(){document.getElementById('add-habit-modal').style.display='none';addHabitOpen=false;}
+function setHabitColor(color,btn){
+  habitColor=color;
+  document.querySelectorAll('#add-habit-modal button[onclick^="setHabitColor"]').forEach(b=>b.style.border='2px solid transparent');
+  btn.style.border='2px solid white';
+}
+async function saveHabit(){
+  const name=document.getElementById('habit-name').value.trim();
+  const icon=document.getElementById('habit-icon').value||'✅';
+  if(!name){toast('Enter a habit name','error');return;}
+  const d=await api('/api/habits',{method:'POST',body:JSON.stringify({name,icon,color:habitColor})});
+  if(d.success){habits.push(d.data);renderHabits();closeAddHabit();toast('Habit added! 🎯','success');}
+  else toast(d.message,'error');
+}
+
+async function loadAchievements(){
+  try{
+    const d=await api('/api/achievements');
+    achievements=d.data||[];
+    renderAchievements();
+  }catch(e){console.error('achievements:',e);}
+}
+
+function renderAchievements(){
+  const el=document.getElementById('achievements-grid');
+  if(!achievements.length){el.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--text-dim)">Loading…</div>';return;}
+  const unlocked=achievements.filter(a=>a.unlocked).length;
+  el.innerHTML=`<div style="grid-column:1/-1;font-size:12px;color:var(--text-dim);margin-bottom:4px">${unlocked} / ${achievements.length} unlocked</div>`
+    +achievements.map(a=>`
+    <div style="background:${a.unlocked?'var(--surface2)':'var(--bg)'};border:1px solid ${a.unlocked?a.color+'44':'var(--border)'};border-radius:12px;padding:14px 12px;text-align:center;transition:all .2s;${a.unlocked?'':'opacity:.4;filter:grayscale(1)'}">
+      <div style="font-size:28px;margin-bottom:6px;${a.unlocked?'':'filter:grayscale(1)'}">${a.icon}</div>
+      <div style="font-size:12.5px;font-weight:600;color:${a.unlocked?a.color:'var(--text-dim)'};margin-bottom:3px">${a.label}</div>
+      <div style="font-size:10.5px;color:var(--text-dim);line-height:1.4">${a.desc}</div>
+      ${a.unlocked&&a.unlocked_at?`<div style="font-size:10px;color:var(--text-light);margin-top:6px">${new Date(a.unlocked_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</div>`:''}
+    </div>`).join('');
+}
 
 // ── Loading overlay ────────────────────────────
 function showLoading(msg){
@@ -1087,6 +1368,7 @@ function showPage(page,el){
   el.classList.add('active');
   if(page==='calendar')renderCal();
   if(page==='list')renderList();
+  if(page==='dashboard')loadDashboard();
 }
 
 function scrollToQ(q,el){
